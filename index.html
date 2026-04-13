@@ -4,11 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Basket Club Tool — ABP</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="css/style.css">
   <!-- SheetJS pour parser les fichiers Excel -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
-  <!-- Google Identity Services pour l'OAuth navigateur -->
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
@@ -22,7 +20,6 @@
       </div>
       <a href="config.html" class="btn-icon" title="Équipes &amp; Divisions"
          style="text-decoration:none; font-size:16px;">📋</a>
-      <button id="btn-settings" class="btn-icon" title="Paramètres">⚙</button>
     </div>
   </header>
 
@@ -102,50 +99,11 @@
 
   </main>
 
-  <!-- ── Modale Paramètres ──────────────────────────────── -->
-  <div id="modal-settings" class="modal hidden" role="dialog" aria-modal="true"
-       aria-labelledby="modal-title">
-    <div class="modal-content">
-      <h2 id="modal-title">⚙&nbsp; Paramètres</h2>
-
-      <p class="hint">
-        Renseigne l'<strong>ID Client OAuth Web</strong> créé dans Google Cloud Console
-        (type « Application Web », origin <code>http://localhost:8080</code>).
-      </p>
-
-      <label>
-        Client ID Google OAuth
-        <input type="text" id="cfg-client-id"
-               placeholder="123456789-xyz.apps.googleusercontent.com"
-               autocomplete="off" spellcheck="false">
-      </label>
-
-      <label>
-        ID Template Slides — Planning
-        <input type="text" id="cfg-template-planning"
-               placeholder="ID de la présentation Google Slides"
-               autocomplete="off" spellcheck="false">
-      </label>
-
-      <label>
-        ID Dossier Drive (destination PNG)
-        <input type="text" id="cfg-drive-folder"
-               placeholder="ID du dossier Google Drive"
-               autocomplete="off" spellcheck="false">
-      </label>
-
-      <div class="modal-actions">
-        <button id="btn-settings-save" class="btn-primary">Enregistrer</button>
-        <button id="btn-settings-cancel" class="btn-secondary">Annuler</button>
-      </div>
-    </div>
-  </div>
-
   <!-- ── Scripts ────────────────────────────────────────── -->
-  <script src="transform.js"></script>
-  <script src="slides.js"></script>
-  <script src="local-render.js"></script>
-  <script src="app.js"></script>
+  <script src="src/transform.js"></script>
+  <script src="src/slides.js"></script>
+  <script src="src/local-render.js"></script>
+  <script src="src/app.js"></script>
 
 </body>
 </html>

@@ -25,24 +25,33 @@ function escHtml(str) {
     .replace(/"/g, "&quot;");
 }
 
-// ── API ──────────────────────────────────────────────────────────────────────
+// ── Storage key ──────────────────────────────────────────────────────────────
+
+const STORAGE_KEY = "bct_teams";
+
+// ── API (localStorage — aucun serveur requis) ─────────────────────────────────
 
 async function apiLoad() {
-  const resp = await fetch("/config/teams");
-  if (!resp.ok) throw new Error(`Lecture teams.json impossible (HTTP ${resp.status})`);
-  return resp.json();
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (!stored) return null;
+  return JSON.parse(stored);
 }
 
 async function apiSave(data) {
-  const resp = await fetch("/config/teams", {
-    method:  "POST",
-    headers: { "Content-Type": "application/json" },
-    body:    JSON.stringify(data),
-  });
-  if (!resp.ok) {
-    const err = await resp.json().catch(() => ({}));
-    throw new Error(err.error || `Sauvegarde échouée (HTTP ${resp.status})`);
-  }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+/** Déclenche le téléchargement de la configuration comme fichier teams.json. */
+function exportTeamsJson(data) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href     = url;
+  a.download = "teams.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // ── État dirty ───────────────────────────────────────────────────────────────
@@ -107,16 +116,30 @@ function buildNormalRow(key, val, type) {
   const tr = document.createElement("tr");
   tr.dataset.key = key;
 
-  const colCls = type === "adversaires" ? " cell-long" : "";
-  tr.innerHTML = `
-    <td class="${colCls}" title="${escHtml(key)}">${escHtml(key)}</td>
-    <td>${escHtml(val)}</td>
-    <td class="col-actions">
-      <div class="cell-actions">
-        <button class="btn-edit"   data-action="edit"   data-key="${escHtml(key)}">Modifier</button>
-        <button class="btn-delete" data-action="delete" data-key="${escHtml(key)}">Supprimer</button>
-      </div>
-    </td>`;
+  if (type === "divisions") {
+    const cat      = escHtml(val?.categorie ?? "");
+    const typematch = escHtml(val?.type      ?? "");
+    tr.innerHTML = `
+      <td title="${escHtml(key)}">${escHtml(key)}</td>
+      <td>${cat}</td>
+      <td><span class="type-badge type-${(val?.type ?? "").toLowerCase()}">${typematch}</span></td>
+      <td class="col-actions">
+        <div class="cell-actions">
+          <button class="btn-edit"   data-action="edit"   data-key="${escHtml(key)}">Modifier</button>
+          <button class="btn-delete" data-action="delete" data-key="${escHtml(key)}">Supprimer</button>
+        </div>
+      </td>`;
+  } else {
+    tr.innerHTML = `
+      <td class="cell-long" title="${escHtml(key)}">${escHtml(key)}</td>
+      <td>${escHtml(val)}</td>
+      <td class="col-actions">
+        <div class="cell-actions">
+          <button class="btn-edit"   data-action="edit"   data-key="${escHtml(key)}">Modifier</button>
+          <button class="btn-delete" data-action="delete" data-key="${escHtml(key)}">Supprimer</button>
+        </div>
+      </td>`;
+  }
   return tr;
 }
 
@@ -125,29 +148,63 @@ function buildEditRow(key, val, type, isNew) {
   const tr = document.createElement("tr");
   tr.classList.add("editing");
 
-  tr.innerHTML = `
-    <td>
-      <input class="input-inline input-key"
-             value="${escHtml(key)}"
-             placeholder="${escHtml(PLACEHOLDER_KEY[type])}"
-             data-original-key="${escHtml(key)}"
-             data-is-new="${isNew}"
-             autocomplete="off" spellcheck="false">
-    </td>
-    <td>
-      <input class="input-inline input-val"
-             value="${escHtml(val)}"
-             placeholder="${escHtml(PLACEHOLDER_VAL[type])}"
-             autocomplete="off" spellcheck="false">
-    </td>
-    <td class="col-actions">
-      <div class="cell-actions">
-        <button class="btn-confirm" data-action="confirm" title="Valider (Entrée)">✓</button>
-        <button class="btn-cancel"  data-action="cancel"
-                data-original-key="${escHtml(key)}"
-                data-is-new="${isNew}" title="Annuler (Échap)">✕</button>
-      </div>
-    </td>`;
+  if (type === "divisions") {
+    const cat     = escHtml(val?.categorie ?? "");
+    const curType = val?.type ?? "CHAMPIONNAT";
+    const opts    = ["CHAMPIONNAT", "COUPE", "AMICAL"]
+      .map(t => `<option value="${t}"${t === curType ? " selected" : ""}>${t}</option>`)
+      .join("");
+    tr.innerHTML = `
+      <td>
+        <input class="input-inline input-key"
+               value="${escHtml(key)}"
+               placeholder="${escHtml(PLACEHOLDER_KEY[type])}"
+               data-original-key="${escHtml(key)}"
+               data-is-new="${isNew}"
+               autocomplete="off" spellcheck="false">
+      </td>
+      <td>
+        <input class="input-inline input-val"
+               value="${cat}"
+               placeholder="Catégorie (ex: U11M)"
+               autocomplete="off" spellcheck="false">
+      </td>
+      <td>
+        <select class="input-inline input-type">${opts}</select>
+      </td>
+      <td class="col-actions">
+        <div class="cell-actions">
+          <button class="btn-confirm" data-action="confirm" title="Valider (Entrée)">✓</button>
+          <button class="btn-cancel"  data-action="cancel"
+                  data-original-key="${escHtml(key)}"
+                  data-is-new="${isNew}" title="Annuler (Échap)">✕</button>
+        </div>
+      </td>`;
+  } else {
+    tr.innerHTML = `
+      <td>
+        <input class="input-inline input-key"
+               value="${escHtml(key)}"
+               placeholder="${escHtml(PLACEHOLDER_KEY[type])}"
+               data-original-key="${escHtml(key)}"
+               data-is-new="${isNew}"
+               autocomplete="off" spellcheck="false">
+      </td>
+      <td>
+        <input class="input-inline input-val"
+               value="${escHtml(val)}"
+               placeholder="${escHtml(PLACEHOLDER_VAL[type])}"
+               autocomplete="off" spellcheck="false">
+      </td>
+      <td class="col-actions">
+        <div class="cell-actions">
+          <button class="btn-confirm" data-action="confirm" title="Valider (Entrée)">✓</button>
+          <button class="btn-cancel"  data-action="cancel"
+                  data-original-key="${escHtml(key)}"
+                  data-is-new="${isNew}" title="Annuler (Échap)">✕</button>
+        </div>
+      </td>`;
+  }
   return tr;
 }
 
@@ -160,9 +217,14 @@ function renderTable(type, filter = "") {
 
   tbody.innerHTML = "";
 
-  const entries = Object.entries(dict).filter(([k, v]) =>
-    !term || k.toLowerCase().includes(term) || v.toLowerCase().includes(term)
-  );
+  const entries = Object.entries(dict).filter(([k, v]) => {
+    if (!term) return true;
+    if (k.toLowerCase().includes(term)) return true;
+    const vStr = type === "divisions"
+      ? `${v?.categorie ?? ""} ${v?.type ?? ""}`.toLowerCase()
+      : String(v).toLowerCase();
+    return vStr.includes(term);
+  });
 
   if (entries.length === 0) {
     const tr = document.createElement("tr");
@@ -263,7 +325,12 @@ function tableClickHandler(e, type) {
 
     // Mise à jour de l'objet
     if (!isNew && origKey !== newKey) delete dict[origKey];
-    dict[newKey] = newVal;
+    if (type === "divisions") {
+      const typeEl = btn.closest("tr").querySelector(".input-type");
+      dict[newKey] = { categorie: newVal, type: typeEl ? typeEl.value : "CHAMPIONNAT" };
+    } else {
+      dict[newKey] = newVal;
+    }
 
     markDirty();
     if (isNew) updateCounts();
@@ -316,7 +383,7 @@ async function handleSave() {
   try {
     await apiSave(state.data);
     markDirty(false);
-    showToast("✓  Enregistré dans config/teams.json", "ok");
+    showToast("✓  Enregistré dans le navigateur", "ok");
   } catch (err) {
     showToast(`Erreur : ${err.message}`, "err");
   } finally {
@@ -334,37 +401,58 @@ window.addEventListener("beforeunload", e => {
   }
 });
 
+// ── Import / Export fichier ───────────────────────────────────────────────────
+
+/**
+ * Configure l'input file caché et les boutons qui le déclenchent.
+ * Gère l'import initial (depuis le panneau vide) ET la réimport depuis la barre.
+ */
+function _setupImportHandler() {
+  const fileInput = document.getElementById("import-file-input");
+
+  // Bouton du panneau d'import initial
+  document.getElementById("btn-import-file")
+    .addEventListener("click", () => fileInput.click());
+  // Bouton de ré-import dans la barre de sauvegarde
+  document.getElementById("btn-import-reinit")
+    .addEventListener("click", () => fileInput.click());
+
+  fileInput.addEventListener("change", async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    e.target.value = "";  // reset pour permettre de re-sélectionner le même fichier
+    try {
+      const text = await file.text();
+      state.data  = JSON.parse(text);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data));
+      // Si on venait du panneau vide → afficher le contenu principal
+      document.getElementById("import-panel").classList.add("hidden");
+      document.getElementById("main-content").classList.remove("hidden");
+      markDirty(false);
+      renderTable("divisions");
+      renderTable("adversaires");
+      updateCounts();
+      showToast("✓  teams.json importé", "ok");
+    } catch (err) {
+      showToast(`Erreur d'import : ${err.message}`, "err");
+    }
+  });
+}
+
 // ── Initialisation ────────────────────────────────────────────────────────────
 
-async function init() {
-  // 1. Chargement de teams.json
-  try {
-    state.data = await apiLoad();
-  } catch (err) {
-    document.querySelector("main").innerHTML = `
-      <div style="max-width:600px;margin:40px auto;background:#fff;border:1px solid var(--border);
-                  border-radius:10px;padding:28px;box-shadow:var(--shadow);">
-        <h2 style="color:var(--error);margin-bottom:12px;">⚠ Impossible de charger teams.json</h2>
-        <p style="margin-bottom:10px;">${escHtml(err.message)}</p>
-        <p class="hint">
-          Assure-toi que le serveur est lancé via <strong>serve.bat</strong>
-          et non en ouvrant le fichier HTML directement dans le navigateur.
-        </p>
-      </div>`;
-    return;
-  }
-
-  // 2. Rendu initial
+/** Configure tous les listeners UI (appelé une fois les données disponibles). */
+function _setupUI() {
   renderTable("divisions");
   renderTable("adversaires");
   updateCounts();
 
-  // 3. Onglets
+  // Onglets
   document.querySelectorAll(".tab-btn").forEach(btn => {
     btn.addEventListener("click", () => switchTab(btn.dataset.tab));
   });
 
-  // 4. Délégation de clics sur les tableaux
+  // Délégation de clics sur les tableaux
   ["divisions", "adversaires"].forEach(type => {
     const tbody = document.getElementById(`tbody-${type}`);
 
@@ -383,20 +471,38 @@ async function init() {
     });
   });
 
-  // 5. Boutons Ajouter
+  // Boutons Ajouter
   document.getElementById("btn-add-division")
     .addEventListener("click", () => addRow("divisions"));
   document.getElementById("btn-add-adversaire")
     .addEventListener("click", () => addRow("adversaires"));
 
-  // 6. Recherche (filtre en temps réel)
+  // Recherche (filtre en temps réel)
   document.getElementById("search-divisions")
     .addEventListener("input", e => renderTable("divisions", e.target.value));
   document.getElementById("search-adversaires")
     .addEventListener("input", e => renderTable("adversaires", e.target.value));
 
-  // 7. Sauvegarde
+  // Sauvegarde + export
   document.getElementById("btn-save").addEventListener("click", handleSave);
+  document.getElementById("btn-export").addEventListener("click", () => {
+    if (state.data) exportTeamsJson(state.data);
+  });
+}
+
+async function init() {
+  _setupImportHandler();
+
+  state.data = await apiLoad();
+
+  if (!state.data) {
+    // Aucune donnée dans localStorage → afficher le panneau d'import
+    document.getElementById("import-panel").classList.remove("hidden");
+    document.getElementById("main-content").classList.add("hidden");
+    return;
+  }
+
+  _setupUI();
 }
 
 init();

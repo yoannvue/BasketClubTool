@@ -254,3 +254,64 @@ main {
   color: var(--muted);
   font-style: italic;
 }
+
+/* ── Panneau d'import initial ────────────────────────────── */
+.import-box {
+  max-width: 480px;
+  margin: 60px auto;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 40px 48px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+.import-box .import-icon { font-size: 42px; margin-bottom: 14px; }
+.import-box h2  { margin: 0 0 12px; font-size: 20px; color: var(--text); }
+.import-box p   { color: var(--muted); font-size: 14px; line-height: 1.7; margin-bottom: 28px; }
+.import-box code {
+  background: #f0f4f8;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--primary);
+}
+
+/* ── Bouton outline (import/export dans la save-bar) ─────── */
+.btn-outline {
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text);
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .12s, border-color .12s, color .12s;
+  white-space: nowrap;
+}
+.btn-outline:hover {
+  background: #f0f6ff;
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* ── Badges type de match (divisions) ────────────────────── */
+.type-badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+}
+.type-badge.type-championnat { background: #dbeafe; color: #1d4ed8; }
+.type-badge.type-coupe        { background: #fef3c7; color: #b45309; }
+.type-badge.type-amical       { background: #f3e8ff; color: #7c3aed; }
+.type-badge:not([class*='type-']) { background: #f0f0f0; color: #555; }
+
+/* ── Select inline (édition divisions) ───────────────────── */
+select.input-inline {
+  cursor: pointer;
+}

@@ -13,63 +13,32 @@
 
 // ── Configuration ────────────────────────────────────────────────────────────
 
-const CONFIG_KEYS = ["clientId", "templatePlanningId", "driveFolderId"];
-
-// Mode de génération : "local" (canvas) ou "slides" (Google Slides API)
+// Mode de generation : "local" (canvas) ou "slides" (Google Slides API)
 let _genMode = "local";
 
-function loadConfig() {
-  return Object.fromEntries(
-    CONFIG_KEYS.map(k => [k, localStorage.getItem(`bct_${k}`) || ""])
-  );
-}
-
-function saveConfig(cfg) {
-  CONFIG_KEYS.forEach(k => localStorage.setItem(`bct_${k}`, cfg[k] || ""));
-}
-
 /**
- * Tente de pré-remplir la configuration depuis les fichiers JSON existants du projet.
- * Ne survient que si le serveur est lancé depuis la racine du projet.
+ * Lit la configuration Google directement depuis les fichiers du projet.
+ * Ne stocke rien dans localStorage.
+ * Retourne { clientId, templatePlanningId, driveFolderId }.
  */
-async function tryAutoLoadConfig() {
-  const cfg = loadConfig();
-  let changed = false;
-
+async function _loadGoogleConfig() {
+  const cfg = { clientId: "", templatePlanningId: "", driveFolderId: "" };
   try {
     const resp = await fetch("../config/settings.json");
     if (resp.ok) {
       const json = await resp.json();
-      if (!cfg.templatePlanningId && json.template_planning_id) {
-        cfg.templatePlanningId = json.template_planning_id;
-        changed = true;
-      }
-      if (!cfg.driveFolderId && json.drive_folder_id) {
-        cfg.driveFolderId = json.drive_folder_id;
-        changed = true;
-      }
+      cfg.templatePlanningId = json.template_planning_id || "";
+      cfg.driveFolderId      = json.drive_folder_id      || "";
     }
   } catch (_) {}
-
-  // Tente de lire le client_id depuis credentials.json (Desktop ou Web app)
-  if (!cfg.clientId) {
-    try {
-      const resp = await fetch("../config/credentials.json");
-      if (resp.ok) {
-        const creds = await resp.json();
-        const clientId =
-          creds.web?.client_id ||
-          creds.installed?.client_id ||
-          "";
-        if (clientId) {
-          cfg.clientId = clientId;
-          changed = true;
-        }
-      }
-    } catch (_) {}
-  }
-
-  if (changed) saveConfig(cfg);
+  try {
+    const resp = await fetch("../config/credentials.json");
+    if (resp.ok) {
+      const creds = await resp.json();
+      cfg.clientId = creds.web?.client_id || creds.installed?.client_id || "";
+    }
+  } catch (_) {}
+  return cfg;
 }
 
 // ── Mode de génération ────────────────────────────────────────────────
@@ -147,17 +116,16 @@ function _updateAuthUI(ok) {
   _updateGenerateButton();
 }
 
-function requestAuth() {
-  const cfg = loadConfig();
+async function requestAuth() {
+  const cfg = await _loadGoogleConfig();
   if (!cfg.clientId) {
     log(
-      "Client ID Google manquant. Ouvre les paramètres ⚙ et renseigne-le.",
+      "Client ID Google introuvable dans config/credentials.json.",
       "err"
     );
     return;
   }
   if (!_tokenClient) _initTokenClient(cfg.clientId);
-  // prompt: "" → réutilise la session si possible, sinon demande la connexion
   _tokenClient.requestAccessToken({ prompt: "" });
 }
 
@@ -201,17 +169,24 @@ function _setupFileHandling() {
   input.addEventListener("change", () => setFile(input.files?.[0]));
 }
 
+function _hasTeamsConfig() {
+  return !!localStorage.getItem("bct_teams");
+}
+
 function _updateGenerateButton() {
   const btn    = document.getElementById("btn-generate");
   const hintEl = document.getElementById("generate-hint");
 
   const needsGoogle = _genMode === "slides";
   const authOk      = !needsGoogle || _isAuthenticated();
-  const ready       = !!_selectedFile && authOk;
+  const teamsOk     = _hasTeamsConfig();
+  const ready       = !!_selectedFile && authOk && teamsOk;
 
   btn.disabled = !ready;
 
-  if (!_selectedFile && needsGoogle && !_isAuthenticated()) {
+  if (!teamsOk) {
+    hintEl.innerHTML = 'Configuration équipes manquante. <a href="config.html">Importer teams.json →</a>';
+  } else if (!_selectedFile && needsGoogle && !_isAuthenticated()) {
     hintEl.textContent = "Connexion Google et fichier Excel requis.";
   } else if (needsGoogle && !_isAuthenticated()) {
     hintEl.textContent = "Connexion Google requise.";
@@ -235,9 +210,9 @@ async function handleGenerate() {
   try {
     // ── 1. Parse Excel ──
     log("Lecture du fichier Excel…", "info");
-    const { domicileList, exterieurList, weekLabel } = await loadPlanningData(_selectedFile);
+    const { domicileList, exterieurList, weekLabel, exemptList } = await loadPlanningData(_selectedFile);
     log(
-      `${domicileList.length} match(s) domicile · ${exterieurList.length} extérieur · ${weekLabel}`,
+      `${domicileList.length} match(s) domicile · ${exterieurList.length} extérieur · ${exemptList.length} exempt(s) · ${weekLabel}`,
       "ok"
     );
 
@@ -254,10 +229,10 @@ async function handleGenerate() {
 
     if (_genMode === "local") {
       log("Génération locale (Canvas)…", "info");
-      blob = await generatePlanningImageLocal(domicileList, exterieurList, weekLabel);
+      blob = await generatePlanningImageLocal(domicileList, exterieurList, weekLabel, exemptList);
       log("Affiche générée localement.", "ok");
     } else {
-      const config = loadConfig();
+      const config = await _loadGoogleConfig();
       const result = await generatePlanningImage(
         domicileList, exterieurList, weekLabel, config, log
       );
@@ -298,84 +273,36 @@ async function handleGenerate() {
 
 // ── Modale Paramètres ─────────────────────────────────────────────────────────
 
-function openSettings() {
-  const cfg = loadConfig();
-  document.getElementById("cfg-client-id").value         = cfg.clientId || "";
-  document.getElementById("cfg-template-planning").value = cfg.templatePlanningId || "";
-  document.getElementById("cfg-drive-folder").value      = cfg.driveFolderId || "";
-  document.getElementById("modal-settings").classList.remove("hidden");
-  document.getElementById("cfg-client-id").focus();
-}
-
-function closeSettings() {
-  document.getElementById("modal-settings").classList.add("hidden");
-}
-
-function saveSettings() {
-  const newCfg = {
-    clientId:           document.getElementById("cfg-client-id").value.trim(),
-    templatePlanningId: document.getElementById("cfg-template-planning").value.trim(),
-    driveFolderId:      document.getElementById("cfg-drive-folder").value.trim(),
-  };
-  saveConfig(newCfg);
-
-  // Réinitialise le tokenClient si le clientId a changé
-  _tokenClient = null;
-  if (newCfg.clientId) _initTokenClient(newCfg.clientId);
-
-  closeSettings();
-  log("Paramètres enregistrés.", "ok");
-}
-
-// ── Initialisation ────────────────────────────────────────────────────────────
-
 async function init() {
-  // 1. Pré-chargement depuis les fichiers JSON du projet
-  await tryAutoLoadConfig();
+  const cfg = await _loadGoogleConfig();
 
-  const cfg = loadConfig();
-
-  // 2. Initialisation auth si clientId disponible
   if (cfg.clientId) {
-    // GIS se charge de manière asynchrone (async defer) — on attend sa disponibilité
     const waitForGIS = (resolve) => {
-      if (typeof google !== "undefined") {
-        resolve();
-      } else {
-        setTimeout(() => waitForGIS(resolve), 100);
-      }
+      if (typeof google !== "undefined") resolve();
+      else setTimeout(() => waitForGIS(resolve), 100);
     };
     await new Promise(waitForGIS);
     _initTokenClient(cfg.clientId);
   }
 
-  // 3. Mise en place des listeners
   _setupFileHandling();
-  document.getElementById("btn-auth")          .addEventListener("click", requestAuth);
-  document.getElementById("btn-generate")      .addEventListener("click", handleGenerate);
-  document.getElementById("btn-settings")      .addEventListener("click", openSettings);
-  document.getElementById("btn-settings-save") .addEventListener("click", saveSettings);
-  document.getElementById("btn-settings-cancel").addEventListener("click", closeSettings);
-  document.getElementById("btn-mode-local")    .addEventListener("click", () => setGenMode("local"));
-  document.getElementById("btn-mode-slides")   .addEventListener("click", () => setGenMode("slides"));
+  document.getElementById("btn-auth")        .addEventListener("click", requestAuth);
+  document.getElementById("btn-generate")    .addEventListener("click", handleGenerate);
+  document.getElementById("btn-mode-local")  .addEventListener("click", () => setGenMode("local"));
+  document.getElementById("btn-mode-slides") .addEventListener("click", () => setGenMode("slides"));
 
-  // Fermeture modale en cliquant sur l'overlay
-  document.getElementById("modal-settings").addEventListener("click", e => {
-    if (e.target === e.currentTarget) closeSettings();
-  });
+  setGenMode("local");
+  log("Application pr\u00eate.", "info");
 
-  // Fermeture modale avec Escape
-  document.addEventListener("keydown", e => {
-    if (e.key === "Escape") closeSettings();
-  });
-
-  // 4. État initial
-  setGenMode("local");   // mode local par défaut (pas de Google requis)
-  log("Application prête.", "info");
-
+  if (!_hasTeamsConfig()) {
+    log(
+      "\u26a0 Configuration \u00e9quipes non charg\u00e9e \u2014 va dans \ud83d\udccb \u00c9quipes & Divisions et importe ton fichier teams.json.",
+      "warn"
+    );
+  }
   if (!cfg.clientId) {
     log(
-      "⚠ Mode Google Slides : Client ID non configuré. Passe par les paramètres ⚙ si nécessaire.",
+      "\u26a0 Mode Google Slides : credentials.json introuvable ou sans client_id (mode local non affect\u00e9).",
       "warn"
     );
   }

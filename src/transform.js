@@ -34,18 +34,19 @@ function _jsDayToJourFr(jsDay) {
 // ── Chargement des référentiels ─────────────────────────────────────────────
 
 /**
- * Charge teams.json.
- * Essaie d'abord l'API locale /api/teams (server.py),
- * puis se rabat sur ../config/teams.json (http.server basique).
+ * Charge teams.json depuis localStorage (clé "bct_teams").
+ * Aucun serveur requis — les données sont stockées via la page « Équipes & Divisions ».
  * Retourne l'objet complet { divisions, adversaires, abp_marker }.
  */
 async function _loadTeamsConfig() {
-  let resp = await fetch("/api/teams");
-  if (!resp.ok) {
-    resp = await fetch("../config/teams.json");
+  const stored = localStorage.getItem("bct_teams");
+  if (stored) {
+    try { return JSON.parse(stored); } catch (_) {}
   }
-  if (!resp.ok) throw new Error(`Impossible de charger teams.json (${resp.status})`);
-  return resp.json();
+  throw new Error(
+    "Configuration équipes introuvable. " +
+    "Ouvrez « Équipes & Divisions » (icône 📋) et importez votre fichier teams.json."
+  );
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -225,6 +226,7 @@ async function loadPlanningData(file) {
 
   const domicileList  = [];
   const exterieurList = [];
+  const exemptList    = [];  // catégories ABP exemptées cette semaine
   const datesFound    = [];
 
   // Sauter la ligne d'en-tête (index 0)
@@ -234,7 +236,17 @@ async function loadPlanningData(file) {
     const e2  = _cellStr(row[COLS.Equipe2]);
 
     if (!e1 && !e2) continue;
-    if (e1.toLowerCase().includes("exempt") || e2.toLowerCase().includes("exempt")) continue;
+
+    // Ligne "Exempt" : capturer la catégorie ABP et sauter
+    if (e1.toLowerCase().includes("exempt") || e2.toLowerCase().includes("exempt")) {
+      const exemptDiv = _cellStr(row[COLS.Division]);
+      if (e2.toLowerCase().includes("exempt") && _isAbp(e1, marker)) {
+        exemptList.push(_abpShortName(exemptDiv, e1, divMap));
+      } else if (e1.toLowerCase().includes("exempt") && _isAbp(e2, marker)) {
+        exemptList.push(_abpShortName(exemptDiv, e2, divMap));
+      }
+      continue;
+    }
 
     const division = _cellStr(row[COLS.Division]);
     const info     = _resolveDivision(division, divMap);
@@ -290,5 +302,5 @@ async function loadPlanningData(file) {
     weekLabel = `Semaine du ${_formatDateFr(new Date())}`;
   }
 
-  return { domicileList, exterieurList, weekLabel };
+  return { domicileList, exterieurList, weekLabel, exemptList };
 }

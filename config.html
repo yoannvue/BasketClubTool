@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Équipes &amp; Divisions — ABP</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="config.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/config.css">
 </head>
 <body>
 
@@ -26,8 +26,28 @@
     <!-- Barre de sauvegarde (sticky) -->
     <div class="save-bar" id="save-bar">
       <span id="dirty-msg" class="dirty-msg hidden">● Modifications non enregistrées</span>
+      <button id="btn-import-reinit" class="btn-outline btn-sm" title="Réimporter depuis un fichier teams.json">📂 Importer</button>
+      <button id="btn-export" class="btn-outline btn-sm" title="Télécharger teams.json">📥 Télécharger</button>
       <button id="btn-save" class="btn-primary btn-sm">💾&nbsp; Enregistrer</button>
     </div>
+    <!-- Input fichier caché (déclenché par les boutons d'import) -->
+    <input type="file" id="import-file-input" class="hidden" accept=".json">
+
+    <!-- Panneau d'import initial (affiché si localStorage vide) -->
+    <div id="import-panel" class="hidden">
+      <div class="import-box">
+        <div class="import-icon">📂</div>
+        <h2>Importer teams.json</h2>
+        <p>
+          Ce fichier contient les divisions et adversaires du club.<br>
+          Il se trouve dans le dossier <code>config/</code> du projet.
+        </p>
+        <button id="btn-import-file" class="btn-primary">Choisir teams.json…</button>
+      </div>
+    </div>
+
+    <!-- Contenu principal (onglets + tableaux) -->
+    <div id="main-content">
 
     <!-- Onglets -->
     <div class="tab-bar" role="tablist">
@@ -57,6 +77,7 @@
             <tr>
               <th>Code fédéral</th>
               <th>Catégorie</th>
+              <th>Match</th>
               <th class="col-actions"></th>
             </tr>
           </thead>
@@ -87,11 +108,13 @@
       </div>
     </div>
 
+    </div><!-- /main-content -->
+
   </main>
 
   <!-- Toast -->
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
-  <script src="config.js"></script>
+  <script src="src/config.js"></script>
 </body>
 </html>

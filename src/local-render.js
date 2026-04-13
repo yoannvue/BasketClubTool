@@ -4,8 +4,11 @@
  * Aucune dépendance externe, aucun appel réseau.
  *
  * API publique :
- *   generatePlanningImageLocal(domicileList, exterieurList, weekLabel)
+ *   generatePlanningImageLocal(domicileList, exterieurList, weekLabel, exemptList?)
  *   → Promise<Blob>  (type image/png)
+ *
+ * exemptList (optionnel) : tableau de noms de catégories ABP exemptées,
+ *   ex: ["U13M", "U9F"]. Affiché sous la colonne la plus courte.
  */
 
 // ── Configuration visuelle ────────────────────────────────────────────────────
@@ -26,7 +29,7 @@ const _LC = Object.freeze({
     PRIMARY2:      "#2E6DA4",
     ACCENT:        "#E8882A",
     BG:            "#EDF2F9",
-    WHITE:         "#FFFFFF",
+    WHITE:         "#ffffff3d",
     DOM_BG:        "#1B5725",
     EXT_BG:        "#7B1E1E",
     BORDER:        "#B0C4D8",
@@ -34,7 +37,7 @@ const _LC = Object.freeze({
     DATE_C:        "#2E6DA4",
     SEP_C:         "#E8882A",
     VS_C:          "#7B8FA6",
-    DAY_LABEL_BG:  "#F4F7FB",
+    DAY_LABEL_BG:  "#f4f7fb77",
   },
 
   F: {
@@ -67,6 +70,25 @@ function _txt(ctx, s, x, y, font, color, align, baseline) {
 function _mw(ctx, s, font) {
   ctx.font = font;
   return ctx.measureText(s).width;
+}
+
+/**
+ * Charge une image depuis src.
+ * Résout null si le fichier est absent ou en erreur (silencieux).
+ * Chemins de ressources par convention :
+ *   ressources/logo.png  — logo du club (fond transparent recommandé)
+ *   ressources/fond.png  — image de fond (facultative)
+ */
+function _loadImg(src) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload  = () => resolve(img);
+    img.onerror = () => {
+      console.warn(`[local-render] Ressource absente ou inaccessible : ${src}`);
+      resolve(null);
+    };
+    img.src = src;
+  });
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -215,7 +237,7 @@ function _drawBlock(ctx, isDOM, groups, bx, startY, w) {
 
 // ── API publique ──────────────────────────────────────────────────────────────
 
-async function generatePlanningImageLocal(domicileList, exterieurList, weekLabel) {
+async function generatePlanningImageLocal(domicileList, exterieurList, weekLabel, exemptList = []) {
   const C   = _LC.C;
   const F   = _LC.F;
   const W   = _LC.W;
@@ -224,7 +246,26 @@ async function generatePlanningImageLocal(domicileList, exterieurList, weekLabel
 
   const domGroups = _computeGroups(domicileList);
   const extGroups = _computeGroups(exterieurList);
-  const H         = _totalHeight(domGroups, extGroups);
+
+  // Hauteur des blocs (hors exempt)
+  const EXEMPT_ROW_H = 30;
+  const EXEMPT_GAP   = 10;
+  const EXEMPT_ROWS  = exemptList.length;
+  const exemptSecH   = EXEMPT_ROWS > 0 ? EXEMPT_GAP + EXEMPT_ROWS * EXEMPT_ROW_H + 8 : 0;
+
+  const domBlockH  = _LC.SEC_H + _blockContentHeight(domGroups);
+  const extBlockH  = _LC.SEC_H + _blockContentHeight(extGroups);
+  // La colonne la plus courte reçoit les exempts (égalité → domicile)
+  const exemptIsDOM = domBlockH <= extBlockH;
+  const domTotalH   = domBlockH + (exemptIsDOM  ? exemptSecH : 0);
+  const extTotalH   = extBlockH + (!exemptIsDOM ? exemptSecH : 0);
+  const H           = _LC.HDR_H + 12 + Math.max(domTotalH, extTotalH) + 12;
+
+  // Chargement des ressources optionnelles (silencieux si absentes)
+  const [logoImg, bgImg] = await Promise.all([
+    _loadImg("ressources/logo.png"),
+    _loadImg("ressources/fond.png"),
+  ]);
 
   const canvas = document.createElement("canvas");
   canvas.width  = W;
@@ -239,6 +280,14 @@ async function generatePlanningImageLocal(domicileList, exterieurList, weekLabel
   // Fond
   _fill(ctx, 0, 0, W, H, C.BG);
 
+  // Image de fond (optionnelle — ressources/fond.png)
+  if (bgImg) {
+    ctx.save();
+    ctx.globalAlpha = 1
+    ctx.drawImage(bgImg, 0, 0, W, H);
+    ctx.restore();
+  }
+
   // Header dégradé
   const grad = ctx.createLinearGradient(0, 0, W, 0);
   grad.addColorStop(0, C.PRIMARY);
@@ -246,10 +295,23 @@ async function generatePlanningImageLocal(domicileList, exterieurList, weekLabel
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, _LC.HDR_H);
 
-  // Semaine en grand (haut), club en petit (bas)
-  const hcx = W / 2;
-  _txt(ctx, weekLabel.toUpperCase(),       hcx, _LC.HDR_H / 2 - 10, F.WEEK, C.WHITE, "center");
-  _txt(ctx, "AMICALE BASKET PECQUENCOURT", hcx, _LC.HDR_H / 2 + 22, F.CLUB, "rgba(255,255,255,0.72)", "center");
+  // Logo du club (optionnel — ressources/logo.png) — ancré à droite dans le header
+  if (logoImg) {
+    // Scaling "contain" : tient dans MAX_LOGO_W × MAX_LOGO_H sans déformation
+    const MAX_LOGO_H = _LC.HDR_H - 16;
+    const MAX_LOGO_W = 180;
+    const scale = Math.min(MAX_LOGO_W / logoImg.width, MAX_LOGO_H / logoImg.height);
+    const lW    = Math.round(logoImg.width  * scale);
+    const lH    = Math.round(logoImg.height * scale);
+    const lX    = W - PAD - lW;
+    const lY    = Math.round((_LC.HDR_H - lH) / 2);
+    ctx.drawImage(logoImg, lX, lY, lW, lH);
+  }
+
+  // Titre & sous-titre alignés à gauche
+  const txtX = PAD + 20;
+  _txt(ctx, weekLabel.toUpperCase(),       txtX, _LC.HDR_H / 2 - 10, F.WEEK, C.WHITE,                  "left");
+  _txt(ctx, "AMICALE BASKET PECQUENCOURT - MONTIGNY EN OSTREVENT", txtX, _LC.HDR_H / 2 + 22, F.CLUB, "rgba(255,255,255,0.72)", "left");
 
   // Bande accent
   _fill(ctx, 0, _LC.HDR_H - 5, W, 5, C.ACCENT);
@@ -260,6 +322,29 @@ async function generatePlanningImageLocal(domicileList, exterieurList, weekLabel
 
   _drawBlock(ctx, true,  domGroups, PAD,             yT, colW);
   _drawBlock(ctx, false, extGroups, PAD + colW + GAP, yT, colW);
+
+  // ── Section EXEMPT(S) ──
+  if (exemptList.length > 0) {
+    const EXEMPT_ROW_H = 30;
+    const EXEMPT_GAP   = 10;
+    const bx   = exemptIsDOM ? PAD : (PAD + colW + GAP);
+    let   ey   = yT + (exemptIsDOM ? domBlockH : extBlockH) + EXEMPT_GAP;
+    const accentColor = exemptIsDOM ? C.DOM_BG : C.EXT_BG;
+
+    for (const cat of exemptList) {
+      // Fond léger
+      _fill(ctx, bx, ey, colW, EXEMPT_ROW_H, C.DAY_LABEL_BG);
+      // Barre latérale
+      _fill(ctx, bx, ey, 4, EXEMPT_ROW_H, C.ACCENT);
+      // Bordure
+      ctx.strokeStyle = C.BORDER;
+      ctx.lineWidth   = 1;
+      ctx.strokeRect(bx + 0.5, ey + 0.5, colW - 1, EXEMPT_ROW_H - 1);
+      // Texte
+      _txt(ctx, `EXEMPT : ${cat}`, bx + 18, ey + EXEMPT_ROW_H / 2, F.SECTION, C.ACCENT);
+      ey += EXEMPT_ROW_H + 3;
+    }
+  }
 
   // Export PNG
   return new Promise((resolve, reject) => {
