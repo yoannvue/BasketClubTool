@@ -216,6 +216,96 @@ main {
 }
 
 /* ──────────────────────────────────────────────────────────
+   Layout toggle (Paysage / Portrait — mode local)
+   ────────────────────────────────────────────────────────── */
+.layout-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.layout-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-right: 2px;
+}
+
+.layout-btn {
+  padding: 6px 14px;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color .15s, background .15s, color .15s;
+}
+.layout-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.layout-btn.active {
+  border-color: var(--primary);
+  background: #e8f0f9;
+  color: var(--primary);
+}
+
+/* ──────────────────────────────────────────────────────────
+   Sélecteur de fond d'affiche
+   ────────────────────────────────────────────────────────── */
+.bg-picker-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.bg-picker {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.bg-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color .15s, background .15s;
+}
+.bg-option:hover  { border-color: var(--primary); }
+.bg-option.active { border-color: var(--primary); background: #e8f0f9; }
+
+.bg-thumb {
+  width: 80px;
+  height: 50px;
+  border-radius: 3px;
+  background-color: #dde5ef;
+  background-size: cover;
+  background-position: center;
+}
+
+.bg-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+
+/* ──────────────────────────────────────────────────────────
    Auth status
    ────────────────────────────────────────────────────────── */
 .status {

@@ -30,8 +30,8 @@ const _LC = Object.freeze({
     ACCENT:        "#E8882A",
     BG:            "#EDF2F9",
     WHITE:         "#ffffff3d",
-    DOM_BG:        "#1B5725",
-    EXT_BG:        "#7B1E1E",
+    DOM_BG:        "#E8882A",
+    EXT_BG:        "#E8882A",
     BORDER:        "#B0C4D8",
     TEXT:          "#1A1A2E",
     DATE_C:        "#2E6DA4",
@@ -51,6 +51,24 @@ const _LC = Object.freeze({
     SEP:       "bold 14px 'Segoe UI', Arial, sans-serif",
   },
 });
+
+// ── Liste des fonds disponibles ─────────────────────────────────────────────
+//
+// Pour ajouter un fond : déposer l'image dans ressources/ puis ajouter une
+// entrée { label: "Nom affiché", file: "ressources/nom.png" } ci-dessous.
+
+const BACKGROUNDS = [
+  { label: "Garcon Dribblant", file: "ressources/fond.png" },
+  { label: "Fille Dribblant", file: "ressources/fond2.png" },
+  { label: "Fille Shoot", file: "ressources/fond3.png" },
+  { label: "Garçon Passe", file: "ressources/fond4.png" },
+  { label: "JH Dribble", file: "ressources/fond5.png" },
+  { label: "JH Passe", file: "ressources/fond6.png" },
+  { label: "JH Shoot", file: "ressources/fond7.png" },
+  { label: "JF Shoot", file: "ressources/fond8.png" },
+  { label: "JF Passe", file: "ressources/fond9.png" }
+
+];
 
 // ── Primitives Canvas ─────────────────────────────────────────────────────────
 
@@ -237,7 +255,7 @@ function _drawBlock(ctx, isDOM, groups, bx, startY, w) {
 
 // ── API publique ──────────────────────────────────────────────────────────────
 
-async function generatePlanningImageLocal(domicileList, exterieurList, weekLabel, exemptList = []) {
+async function generatePlanningImageLocal(domicileList, exterieurList, weekLabel, exemptList = [], bgPath = null) {
   const C   = _LC.C;
   const F   = _LC.F;
   const W   = _LC.W;
@@ -264,7 +282,7 @@ async function generatePlanningImageLocal(domicileList, exterieurList, weekLabel
   // Chargement des ressources optionnelles (silencieux si absentes)
   const [logoImg, bgImg] = await Promise.all([
     _loadImg("ressources/logo.png"),
-    _loadImg("ressources/fond.png"),
+    bgPath ? _loadImg(bgPath) : Promise.resolve(null),
   ]);
 
   const canvas = document.createElement("canvas");
@@ -280,11 +298,15 @@ async function generatePlanningImageLocal(domicileList, exterieurList, weekLabel
   // Fond
   _fill(ctx, 0, 0, W, H, C.BG);
 
-  // Image de fond (optionnelle — ressources/fond.png)
+  // Image de fond (optionnelle — cover centré, sans déformation)
   if (bgImg) {
+    const scale = Math.max(W / bgImg.width, H / bgImg.height);
+    const bW    = bgImg.width  * scale;
+    const bH    = bgImg.height * scale;
+    const bX    = (W - bW) / 2;
+    const bY    = (H - bH) / 2;
     ctx.save();
-    ctx.globalAlpha = 1
-    ctx.drawImage(bgImg, 0, 0, W, H);
+    ctx.drawImage(bgImg, bX, bY, bW, bH);
     ctx.restore();
   }
 
@@ -344,6 +366,141 @@ async function generatePlanningImageLocal(domicileList, exterieurList, weekLabel
       _txt(ctx, `EXEMPT : ${cat}`, bx + 18, ey + EXEMPT_ROW_H / 2, F.SECTION, C.ACCENT);
       ey += EXEMPT_ROW_H + 3;
     }
+  }
+
+  // Export PNG
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      blob => (blob ? resolve(blob) : reject(new Error("Export PNG \u00e9chou\u00e9."))),
+      "image/png"
+    );
+  });
+}
+
+// ── Mode Portrait ─────────────────────────────────────────────────────────────
+
+/**
+ * Génère l'affiche planning en mode PORTRAIT (pleine largeur, blocs empilés).
+ *
+ * Layout :
+ *   - Header identique au mode paysage
+ *   - Bloc DOMICILE   → pleine largeur
+ *   - Bloc EXTÉRIEUR  → pleine largeur, sous le précédent
+ *   - Ligne EXEMPT    → une seule ligne "EXEMPT : U9F, U11F, …"
+ *
+ * @param {object[]} domicileList
+ * @param {object[]} exterieurList
+ * @param {string}   weekLabel
+ * @param {string[]} exemptList
+ * @returns {Promise<Blob>}
+ */
+async function generatePlanningImageLocalPortrait(domicileList, exterieurList, weekLabel, exemptList = [], bgPath = null) {
+  const C = _LC.C;
+  const F = _LC.F;
+
+  // Constantes propres au mode portrait
+  const W          = 900;
+  const PAD        = 30;
+  const BLOCK_GAP  = 16;   // espace vertical entre les deux blocs
+  const EXEMPT_H   = 40;   // hauteur de la ligne exempt
+
+  const colW = W - PAD * 2;
+
+  const domGroups = _computeGroups(domicileList);
+  const extGroups = _computeGroups(exterieurList);
+
+  const domBlockH = _LC.SEC_H + _blockContentHeight(domGroups);
+  const extBlockH = _LC.SEC_H + _blockContentHeight(extGroups);
+  const exemptSecH = exemptList.length > 0 ? BLOCK_GAP + EXEMPT_H : 0;
+
+  const H = _LC.HDR_H + 12
+    + domBlockH + BLOCK_GAP
+    + extBlockH
+    + exemptSecH
+    + 16;
+
+  // Ressources optionnelles
+  const [logoImg, bgImg] = await Promise.all([
+    _loadImg("ressources/logo.png"),
+    bgPath ? _loadImg(bgPath) : Promise.resolve(null),
+  ]);
+
+  const canvas = document.createElement("canvas");
+  canvas.width  = W;
+  canvas.height = H;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas 2D non support\u00e9 par ce navigateur.");
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+
+  // Fond
+  _fill(ctx, 0, 0, W, H, C.BG);
+
+  // Image de fond (optionnelle — cover centré, sans déformation)
+  if (bgImg) {
+    const scale = Math.max(W / bgImg.width, H / bgImg.height);
+    const bW    = bgImg.width  * scale;
+    const bH    = bgImg.height * scale;
+    const bX    = (W - bW) / 2;
+    const bY    = (H - bH) / 2;
+    ctx.save();
+    ctx.drawImage(bgImg, bX, bY, bW, bH);
+    ctx.restore();
+  }
+
+  // Header dégradé
+  const grad = ctx.createLinearGradient(0, 0, W, 0);
+  grad.addColorStop(0, C.PRIMARY);
+  grad.addColorStop(1, C.PRIMARY2);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, _LC.HDR_H);
+
+  // Logo (optionnel)
+  if (logoImg) {
+    const MAX_LOGO_H = _LC.HDR_H - 16;
+    const MAX_LOGO_W = 160;
+    const scale = Math.min(MAX_LOGO_W / logoImg.width, MAX_LOGO_H / logoImg.height);
+    const lW    = Math.round(logoImg.width  * scale);
+    const lH    = Math.round(logoImg.height * scale);
+    const lX    = W - PAD - lW;
+    const lY    = Math.round((_LC.HDR_H - lH) / 2);
+    ctx.drawImage(logoImg, lX, lY, lW, lH);
+  }
+
+  // Titre
+  const txtX = PAD + 10;
+  _txt(ctx, weekLabel.toUpperCase(), txtX, _LC.HDR_H / 2 - 10, F.WEEK, C.WHITE, "left");
+  _txt(ctx, "AMICALE BASKET PECQUENCOURT - MONTIGNY EN OSTREVENT", txtX, _LC.HDR_H / 2 + 22, F.CLUB, "rgba(255,255,255,0.72)", "left");
+
+  // Bande accent
+  _fill(ctx, 0, _LC.HDR_H - 5, W, 5, C.ACCENT);
+
+  let yT = _LC.HDR_H + 12;
+
+  // Bloc DOMICILE (pleine largeur)
+  _drawBlock(ctx, true,  domGroups, PAD, yT, colW);
+  yT += domBlockH + BLOCK_GAP;
+
+  // Bloc EXTÉRIEUR (pleine largeur)
+  _drawBlock(ctx, false, extGroups, PAD, yT, colW);
+  yT += extBlockH;
+
+  // Ligne EXEMPT (une seule ligne, toutes catégories sur la même ligne)
+  if (exemptList.length > 0) {
+    yT += BLOCK_GAP;
+    _fill(ctx, PAD, yT, colW, EXEMPT_H, C.DAY_LABEL_BG);
+    _fill(ctx, PAD, yT, 4,    EXEMPT_H, C.ACCENT);
+    ctx.strokeStyle = C.BORDER;
+    ctx.lineWidth   = 1;
+    ctx.strokeRect(PAD + 0.5, yT + 0.5, colW - 1, EXEMPT_H - 1);
+    _txt(
+      ctx,
+      `EXEMPT : ${exemptList.join(", ")}`,
+      PAD + 18, yT + EXEMPT_H / 2,
+      F.SECTION, C.ACCENT
+    );
   }
 
   // Export PNG

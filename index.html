@@ -26,17 +26,7 @@
   <!-- ── Contenu principal ─────────────────────────────── -->
   <main>
 
-    <!-- Étape 1 : Connexion Google (affiché uniquement en mode Google Slides) -->
-    <section class="card hidden" id="section-auth">
-      <h2>Connexion Google</h2>
-      <p class="hint">
-        Nécessaire pour copier le template Slides, remplir les données, et uploader sur Drive.
-      </p>
-      <button id="btn-auth" class="btn-primary">Se connecter avec Google</button>
-      <div id="auth-status" class="status"></div>
-    </section>
-
-    <!-- Étape 2 : Fichier Excel -->
+    <!-- Étape 1 : Fichier Excel -->
     <section class="card" id="section-upload">
       <h2>Fichier Prochaines Rencontres</h2>
       <div id="drop-zone" class="drop-zone">
@@ -55,23 +45,18 @@
     <section class="card" id="section-generate">
       <h2>Générer l'affiche planning</h2>
 
-      <!-- Sélecteur de mode -->
-      <div class="mode-toggle" role="group" aria-label="Mode de génération">
-        <button id="btn-mode-local" class="mode-btn active" data-mode="local">
-          🖥&nbsp; Génération locale
-          <span class="mode-badge">Hors-ligne</span>
-        </button>
-        <button id="btn-mode-slides" class="mode-btn" data-mode="slides">
-          🔗&nbsp; Google Slides
-          <span class="mode-badge">Fidèle au template</span>
-        </button>
+      <!-- Sélecteur de mise en page -->
+      <div class="layout-toggle" id="section-layout" role="group" aria-label="Mise en page">
+        <span class="layout-label">Mise en page :</span>
+        <button id="btn-layout-paysage" class="layout-btn active">🖼&nbsp; Paysage</button>
+        <button id="btn-layout-portrait" class="layout-btn">📄&nbsp; Portrait</button>
       </div>
-      <p class="mode-desc" id="mode-desc-local">
-        Génère l'image directement dans le navigateur. Aucune connexion Google requise.
-      </p>
-      <p class="mode-desc hidden" id="mode-desc-slides">
-        Utilise ton template Google Slides. Nécessite une connexion Google et l'ID du template configuré.
-      </p>
+
+      <!-- Sélecteur de fond d'affiche -->
+      <div class="bg-picker-row">
+        <span class="layout-label">Fond d'affiche :</span>
+        <div id="bg-picker" class="bg-picker"></div>
+      </div>
 
       <p class="hint" id="generate-hint"></p>
       <button id="btn-generate" class="btn-primary btn-big" disabled>
@@ -85,9 +70,6 @@
       <img id="result-img" src="" alt="Affiche planning générée" class="result-img">
       <div class="result-actions">
         <a id="btn-download" class="btn-primary" download="affiche_planning.png">⬇&nbsp; Télécharger PNG</a>
-        <a id="btn-drive" class="btn-secondary" href="#" target="_blank" rel="noopener">
-          📁&nbsp; Voir sur Drive
-        </a>
       </div>
     </div>
 
@@ -101,7 +83,6 @@
 
   <!-- ── Scripts ────────────────────────────────────────── -->
   <script src="src/transform.js"></script>
-  <script src="src/slides.js"></script>
   <script src="src/local-render.js"></script>
   <script src="src/app.js"></script>
 
