@@ -186,10 +186,11 @@ function _buildDatetime(dateVal, heureVal) {
  */
 function _formatDateAffiche(dt) {
   if (!(dt instanceof Date) || isNaN(dt.getTime())) return "";
-  const jour   = _jsDayToJourFr(dt.getDay());
+  const jour  = _jsDayToJourFr(dt.getDay());
+  const mois  = _MOIS_FR[dt.getMonth()].toUpperCase();
   const heures = dt.getHours();
   const mins   = String(dt.getMinutes()).padStart(2, "0");
-  return `${jour}\n${heures}H${mins}`;
+  return `${jour} ${dt.getDate()} ${mois}\n${heures}H${mins}`;
 }
 
 function _formatDateFr(dt) {

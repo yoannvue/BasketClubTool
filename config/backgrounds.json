@@ -1,0 +1,11 @@
+[
+  { "label": "Garcon Dribblant", "file": "ressources/fonds/fond.png"  },
+  { "label": "Fille Dribblant",  "file": "ressources/fonds/fond2.png" },
+  { "label": "Fille Shoot",      "file": "ressources/fonds/fond3.png" },
+  { "label": "Garçon Passe",     "file": "ressources/fonds/fond4.png" },
+  { "label": "JH Dribble",       "file": "ressources/fonds/fond5.png" },
+  { "label": "JH Passe",         "file": "ressources/fonds/fond6.png" },
+  { "label": "JH Shoot",         "file": "ressources/fonds/fond7.png" },
+  { "label": "JF Shoot",         "file": "ressources/fonds/fond8.png" },
+  { "label": "JF Passe",         "file": "ressources/fonds/fond9.png" }
+]

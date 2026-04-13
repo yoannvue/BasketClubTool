@@ -68,6 +68,7 @@ header {
   border-radius: 6px;
   line-height: 1;
   transition: background .15s;
+  text-decoration:none; 
 }
 .btn-icon:hover { background: rgba(255,255,255,.15); }
 
@@ -292,53 +293,90 @@ main {
 }
 
 /* ──────────────────────────────────────────────────────────
-   Sélecteur de fond d'affiche
+   Sélecteur de fond — dropdown avec vignette
    ────────────────────────────────────────────────────────── */
 .bg-picker-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
   margin-bottom: 14px;
-  flex-wrap: wrap;
 }
 
-.bg-picker {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+/* Conteneur injecté par JS */
+.bg-dropdown {
+  position: relative;
+  display: inline-block;
 }
 
-.bg-option {
+/* Bouton trigger */
+.bg-dd-trigger {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 4px;
-  border: 2px solid var(--border);
-  border-radius: 6px;
+  gap: 10px;
+  padding: 4px 10px 4px 4px;
+  border: 1.5px solid var(--border);
+  border-radius: 7px;
   background: #fff;
   cursor: pointer;
   font-family: inherit;
-  transition: border-color .15s, background .15s;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  min-width: 200px;
+  transition: border-color .15s, box-shadow .15s;
 }
-.bg-option:hover  { border-color: var(--primary); }
-.bg-option.active { border-color: var(--primary); background: #e8f0f9; }
+.bg-dd-trigger:hover,
+.bg-dd-trigger:focus {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(31,78,121,.10);
+}
 
-.bg-thumb {
-  width: 80px;
-  height: 50px;
-  border-radius: 3px;
+.bg-dd-label { flex: 1; text-align: left; }
+.bg-dd-arrow  { color: var(--muted); font-size: 11px; user-select: none; }
+
+/* Panel déroulant */
+.bg-dd-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 200;
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 7px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.13);
+  max-height: 320px;
+  overflow-y: auto;
+  min-width: 230px;
+  padding: 4px;
+}
+
+/* Ligne dans le panel */
+.bg-dd-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  transition: background .12s;
+}
+.bg-dd-item:hover  { background: #f0f4f9; }
+.bg-dd-item.active { background: #e8f0f9; color: var(--primary); }
+
+/* Vignette partagée (trigger + items) */
+.bg-dd-thumb {
+  width: 70px;
+  height: 44px;
+  border-radius: 4px;
   background-color: #dde5ef;
   background-size: cover;
   background-position: center;
-}
-
-.bg-label {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: .03em;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
 }
 
 /* ──────────────────────────────────────────────────────────

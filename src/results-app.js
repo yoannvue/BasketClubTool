@@ -26,30 +26,7 @@ function rLog(msg, type = "info") {
 // ── Sélecteur de fond ─────────────────────────────────────────────────────────
 
 function _buildResultsBgPicker() {
-  const container = document.getElementById("bg-picker");
-  BACKGROUNDS.forEach((bg, i) => {
-    const btn = document.createElement("button");
-    btn.className = "bg-option" + (i === 0 ? " active" : "");
-    btn.title     = bg.label;
-    btn.type      = "button";
-
-    const thumb = document.createElement("div");
-    thumb.className = "bg-thumb";
-    if (bg.file) thumb.style.backgroundImage = `url('${bg.file}')`;
-
-    const label = document.createElement("span");
-    label.className   = "bg-label";
-    label.textContent = bg.label;
-
-    btn.appendChild(thumb);
-    btn.appendChild(label);
-    btn.addEventListener("click", () => {
-      _resultsBg = bg.file;
-      container.querySelectorAll(".bg-option").forEach(el => el.classList.remove("active"));
-      btn.classList.add("active");
-    });
-    container.appendChild(btn);
-  });
+  _buildBgDropdown("bg-picker", file => { _resultsBg = file; });
 }
 
 // ── Sélection du fichier ──────────────────────────────────────────────────────
@@ -137,7 +114,8 @@ async function handleResultsGenerate() {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
-function initResults() {
+async function initResults() {
+  await _loadBackgrounds();
   _setupResultsFileHandling();
   _buildResultsBgPicker();
   document.getElementById("btn-generate").addEventListener("click", handleResultsGenerate);

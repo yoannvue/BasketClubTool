@@ -30,8 +30,8 @@ const _LC = Object.freeze({
     ACCENT:        "#E8882A",
     BG:            "#EDF2F9",
     WHITE:         "#ffffff3d",
-    DOM_BG:        "#E8882A",
-    EXT_BG:        "#E8882A",
+    DOM_BG:        "#1F4E79",
+    EXT_BG:        "#1F4E79",
     BORDER:        "#B0C4D8",
     TEXT:          "#1A1A2E",
     DATE_C:        "#2E6DA4",
@@ -54,21 +54,125 @@ const _LC = Object.freeze({
 
 // ── Liste des fonds disponibles ─────────────────────────────────────────────
 //
-// Pour ajouter un fond : déposer l'image dans ressources/ puis ajouter une
-// entrée { label: "Nom affiché", file: "ressources/nom.png" } ci-dessous.
+// Source : config/backgrounds.json
+// Pour ajouter un fond : déposer l'image dans ressources/fonds/ et ajouter
+// une entrée { "label": "Nom affiché", "file": "ressources/fonds/nom.png" }
+// dans config/backgrounds.json.
 
-const BACKGROUNDS = [
-  { label: "Garcon Dribblant", file: "ressources/fond.png" },
-  { label: "Fille Dribblant", file: "ressources/fond2.png" },
-  { label: "Fille Shoot", file: "ressources/fond3.png" },
-  { label: "Garçon Passe", file: "ressources/fond4.png" },
-  { label: "JH Dribble", file: "ressources/fond5.png" },
-  { label: "JH Passe", file: "ressources/fond6.png" },
-  { label: "JH Shoot", file: "ressources/fond7.png" },
-  { label: "JF Shoot", file: "ressources/fond8.png" },
-  { label: "JF Passe", file: "ressources/fond9.png" }
+let BACKGROUNDS = [];
 
-];
+async function _loadBackgrounds() {
+  if (BACKGROUNDS.length > 0) return; // déjà chargé
+  try {
+    const resp = await fetch("config/backgrounds.json");
+    if (resp.ok) {
+      BACKGROUNDS = await resp.json();
+    } else {
+      console.warn(`[local-render] Impossible de charger backgrounds.json (HTTP ${resp.status})`);
+    }
+  } catch (e) {
+    console.warn("[local-render] Erreur chargement backgrounds.json :", e);
+  }
+}
+
+// ── Dropdown fond d'affiche (partagé) ─────────────────────────────────────────
+
+/**
+ * Construit un sélecteur de fond avec vignette dans le conteneur `containerId`.
+ * `setFn(filePath | null)` est appelé à chaque sélection.
+ * Premier élément sélectionné par défaut (peut être null si pas de fond).
+ */
+function _buildBgDropdown(containerId, setFn) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const initial = BACKGROUNDS[0] || { label: "Aucun", file: null };
+
+  // ─ Wrapper
+  const wrap    = document.createElement("div");
+  wrap.className = "bg-dropdown";
+
+  // ─ Trigger (bouton affiché en permanence)
+  const trigger = document.createElement("button");
+  trigger.type      = "button";
+  trigger.className = "bg-dd-trigger";
+
+  const trigThumb = document.createElement("div");
+  trigThumb.className = "bg-dd-thumb";
+  if (initial.file) trigThumb.style.backgroundImage = `url('${initial.file}')`;
+
+  const trigLabel = document.createElement("span");
+  trigLabel.className   = "bg-dd-label";
+  trigLabel.textContent = initial.label;
+
+  const trigArrow = document.createElement("span");
+  trigArrow.className   = "bg-dd-arrow";
+  trigArrow.textContent = "▾";
+
+  trigger.appendChild(trigThumb);
+  trigger.appendChild(trigLabel);
+  trigger.appendChild(trigArrow);
+
+  // ─ Panel
+  const panel    = document.createElement("div");
+  panel.className = "bg-dd-panel";
+  panel.hidden    = true;
+
+  BACKGROUNDS.forEach((bg, i) => {
+    const item    = document.createElement("div");
+    item.className = "bg-dd-item" + (i === 0 ? " active" : "");
+    item.role      = "option";
+
+    const thumb    = document.createElement("div");
+    thumb.className = "bg-dd-thumb";
+    if (bg.file) thumb.style.backgroundImage = `url('${bg.file}')`;
+
+    const lbl      = document.createElement("span");
+    lbl.textContent = bg.label;
+
+    item.appendChild(thumb);
+    item.appendChild(lbl);
+
+    item.addEventListener("click", () => {
+      // Mettre à jour le trigger
+      trigThumb.style.backgroundImage = bg.file ? `url('${bg.file}')` : "";
+      trigLabel.textContent = bg.label;
+      // État actif
+      panel.querySelectorAll(".bg-dd-item").forEach(el => el.classList.remove("active"));
+      item.classList.add("active");
+      // Fermer
+      panel.hidden    = true;
+      trigArrow.textContent = "▾";
+      // Callback
+      setFn(bg.file);
+    });
+
+    panel.appendChild(item);
+  });
+
+  // Ouvrir / fermer
+  trigger.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const open = !panel.hidden;
+    panel.hidden          = open;
+    trigArrow.textContent = open ? "▾" : "▴";
+  });
+
+  // Fermer au clic extérieur
+  document.addEventListener("click", () => {
+    if (!panel.hidden) {
+      panel.hidden          = true;
+      trigArrow.textContent = "▾";
+    }
+  });
+
+  wrap.appendChild(trigger);
+  wrap.appendChild(panel);
+  container.appendChild(wrap);
+
+  // Sélection initiale
+  setFn(initial.file);
+}
 
 // ── Primitives Canvas ─────────────────────────────────────────────────────────
 

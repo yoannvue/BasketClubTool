@@ -20,11 +20,9 @@
 const _RRC = Object.freeze({
   W:          900,
   PAD:         30,
-  CAT_BH:      36,  // hauteur bandeau catégorie
-  ROW_H:       46,  // hauteur d'une ligne de résultat
-  ROW_PAD_V:   10,  // padding vertical pour alignement texte
-  CAT_GAP:     12,  // espace vertical entre groupes
-  FOOTER_H:    90,  // zone sponsor (footer)
+  ROW_H:       40,  // hauteur d'une ligne de résultat
+  ROW_GAP:      2,  // séparateur entre lignes
+  FOOTER_H:    200,  // zone sponsor (footer)
 
   C: {
     PRIMARY:        "#1F4E79",
@@ -34,11 +32,7 @@ const _RRC = Object.freeze({
     BORDER:         "#B0C4D8",
     TEXT:           "#1A1A2E",
     MUTED:          "#7B8FA6",
-    CAT_BG:         "#1F4E79",
-    CAT_TEXT:       "#ffffff",
-    WIN_BG:         "#eaf6ec",
-    LOSE_BG:        "#fdf0f0",
-    DRAW_BG:        "#f4f7fbcc",
+    ROW_BG:         "#ffffff65",
     SCORE_WIN:      "#1B5725",
     SCORE_LOSE:     "#7B1E1E",
     SCORE_DRAW:     "#2E6DA4",
@@ -50,28 +44,13 @@ const _RRC = Object.freeze({
   F: {
     CLUB:    "600 13px 'Segoe UI', Arial, sans-serif",
     WEEK:    "bold 24px 'Segoe UI', Arial, sans-serif",
-    CAT:     "bold 13px 'Segoe UI', Arial, sans-serif",
     TEAM:    "bold 14px 'Segoe UI', Arial, sans-serif",
-    SCORE:   "bold 20px 'Segoe UI', Arial, sans-serif",
+    SCORE:   "bold 24px 'Segoe UI', Arial, sans-serif",
     SPONSOR: "600 13px 'Segoe UI', Arial, sans-serif",
   },
 });
 
 // ── Helpers internes ──────────────────────────────────────────────────────────
-
-/** Regroupe les matchs (déjà triés) par catégorie. */
-function _buildResultGroups(matchList) {
-  const groups = [];
-  let cur = null;
-  for (const m of matchList) {
-    if (!cur || cur.categorie !== m.categorie) {
-      cur = { categorie: m.categorie, matches: [] };
-      groups.push(cur);
-    }
-    cur.matches.push(m);
-  }
-  return groups;
-}
 
 /** Dessine le header identique au mode Portrait du planning. */
 function _drawResultsHeader(ctx, W, weekLabel, logoImg) {
@@ -139,24 +118,16 @@ function _drawFooter(ctx, W, H, sponsorText) {
  * @returns {Promise<Blob>}
  */
 async function generateResultsImage(matchList, weekLabel, bgPath = null, sponsorText = "") {
-  const C   = _RRC.C;
-  const F   = _RRC.F;
-  const W   = _RRC.W;
-  const PAD = _RRC.PAD;
+  const C    = _RRC.C;
+  const F    = _RRC.F;
+  const W    = _RRC.W;
+  const PAD  = _RRC.PAD;
   const colW = W - PAD * 2;
 
-  // ── Groupes ──────────────────────────────────────────────────────
-  const groups = _buildResultGroups(matchList);
-
   // ── Calcul hauteur ───────────────────────────────────────────────
-  let contentH = 0;
-  for (let gi = 0; gi < groups.length; gi++) {
-    contentH += _RRC.CAT_BH + groups[gi].matches.length * _RRC.ROW_H;
-    if (gi < groups.length - 1) contentH += _RRC.CAT_GAP;
-  }
-  if (matchList.length === 0) contentH = _RRC.ROW_H * 2;
-
-  const H = _LC.HDR_H + 12 + contentH + 12 + _RRC.FOOTER_H;
+  const n        = matchList.length || 1;
+  const contentH = n * _RRC.ROW_H + (n - 1) * _RRC.ROW_GAP;
+  const H        = _LC.HDR_H + 12 + contentH + 12 + _RRC.FOOTER_H;
 
   // ── Ressources ───────────────────────────────────────────────────
   const [logoImg, bgImg] = await Promise.all([
@@ -175,97 +146,79 @@ async function generateResultsImage(matchList, weekLabel, bgPath = null, sponsor
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
 
-  // ── Fond ─────────────────────────────────────────────────────────
+  // ── 1. Fond uni ──────────────────────────────────────────────────
   _fill(ctx, 0, 0, W, H, C.BG);
 
+  // ── 2. Image de fond (cover centré, sous tout le reste) ──────────
   if (bgImg) {
     const scale = Math.max(W / bgImg.width, H / bgImg.height);
     const bW    = bgImg.width  * scale;
     const bH    = bgImg.height * scale;
-    ctx.save();
     ctx.drawImage(bgImg, (W - bW) / 2, (H - bH) / 2, bW, bH);
-    ctx.restore();
   }
 
-  // ── Header ───────────────────────────────────────────────────────
+  // ── 3. Header (par-dessus le fond) ───────────────────────────────
   _drawResultsHeader(ctx, W, weekLabel, logoImg);
 
-  // ── Corps ────────────────────────────────────────────────────────
+  // ── 4. Lignes de résultats ───────────────────────────────────────
+  //  Zones X  :  NomABP (38 %)  |  Score (24 %, centré)  |  Adversaire (38 %, droite)
+  const ZONE_LEFT  = Math.floor(colW * 0.38);
+  const ZONE_SCORE = Math.floor(colW * 0.24);
+  const ZONE_RIGHT = colW - ZONE_LEFT - ZONE_SCORE;
 
-  // Zones X fixes (proportions sur colW) :
-  //   Nom ABP   : 0 → 38 %   (gauche, left-align)
-  //   Score     : 38 → 62 %  (centré)
-  //   Adversaire: 62 → 100 % (droite, right-align)
-  const ZONE_LEFT   = Math.floor(colW * 0.38);
-  const ZONE_SCORE  = Math.floor(colW * 0.24);
-  const ZONE_RIGHT  = colW - ZONE_LEFT - ZONE_SCORE;
-
-  const xTeamLeft  = PAD + 12;                          // left-align ABP
-  const xScoreCtr  = PAD + ZONE_LEFT + ZONE_SCORE / 2;  // centre score
-  const xOppRight  = PAD + ZONE_LEFT + ZONE_SCORE + ZONE_RIGHT - 12; // right-align adversaire
+  const xTeamLeft = PAD + 12;
+  const xScoreCtr = PAD + ZONE_LEFT + ZONE_SCORE / 2;
+  const xOppRight = PAD + ZONE_LEFT + ZONE_SCORE + ZONE_RIGHT - 12;
 
   let y = _LC.HDR_H + 12;
 
-  if (groups.length === 0) {
-    _txt(ctx, "Aucun r\u00e9sultat \u00e0 afficher.", PAD + 10, y + _RRC.ROW_H, F.CAT, C.MUTED);
+  if (matchList.length === 0) {
+    _txt(ctx, "Aucun r\u00e9sultat \u00e0 afficher.", PAD + 10, y + _RRC.ROW_H / 2, F.TEAM, C.MUTED);
   }
 
-  for (let gi = 0; gi < groups.length; gi++) {
-    const g         = groups[gi];
-    const groupTopY = y;
-    const groupH    = _RRC.CAT_BH + g.matches.length * _RRC.ROW_H;
+  for (let i = 0; i < matchList.length; i++) {
+    const m   = matchList[i];
+    const ry  = y;
+    const mid = ry + _RRC.ROW_H / 2;
 
-    // ── Bandeau catégorie ───────────────────────────────────────
-    _fill(ctx, PAD, y, colW, _RRC.CAT_BH, C.CAT_BG);
-    _fill(ctx, PAD, y, 4,    _RRC.CAT_BH, C.ACCENT);
-    _txt(ctx, g.categorie, PAD + 16, y + _RRC.CAT_BH / 2, F.CAT, C.CAT_TEXT);
-    y += _RRC.CAT_BH;
+    // Fond uniforme semi-transparent pour toutes les lignes
+    _fill(ctx, PAD, ry, colW, _RRC.ROW_H, C.ROW_BG);
 
-    // ── Lignes de résultats ─────────────────────────────────────
-    for (let mi = 0; mi < g.matches.length; mi++) {
-      const m   = g.matches[mi];
-      const ry  = y;
-      const mid = ry + _RRC.ROW_H / 2;
-
-      // Couleur de fond selon victoire / défaite / nul
-      const sa = parseInt(m.scoreAbp, 10);
-      const so = parseInt(m.scoreAdv, 10);
-      let rowBg    = C.DRAW_BG;
-      let scoreCol = C.SCORE_DRAW;
-      if (!isNaN(sa) && !isNaN(so)) {
-        if      (sa > so) { rowBg = C.WIN_BG;  scoreCol = C.SCORE_WIN;  }
-        else if (sa < so) { rowBg = C.LOSE_BG; scoreCol = C.SCORE_LOSE; }
-      }
-
-      _fill(ctx, PAD, ry, colW, _RRC.ROW_H, rowBg);
-
-      // Séparateur entre lignes (sauf après la dernière)
-      if (mi < g.matches.length - 1) {
-        ctx.strokeStyle = "rgba(0,0,0,0.07)";
-        ctx.lineWidth   = 1;
-        ctx.beginPath();
-        ctx.moveTo(PAD + 16,       ry + _RRC.ROW_H + 0.5);
-        ctx.lineTo(PAD + colW - 16, ry + _RRC.ROW_H + 0.5);
-        ctx.stroke();
-      }
-
-      // Textes
-      _txt(ctx, m.equipe     || "", xTeamLeft, mid, F.TEAM,  C.TEXT,     "left");
-      _txt(ctx, `${m.scoreAbp}  \u2013  ${m.scoreAdv}`, xScoreCtr, mid, F.SCORE, scoreCol, "center");
-      _txt(ctx, m.adversaire || "", xOppRight, mid, F.TEAM,  C.TEXT,     "right");
-
-      y += _RRC.ROW_H;
+    // Séparateur léger entre lignes
+    if (i < matchList.length - 1) {
+      ctx.strokeStyle = "rgba(0,0,0,0.08)";
+      ctx.lineWidth   = 1;
+      ctx.beginPath();
+      ctx.moveTo(PAD + 16,        ry + _RRC.ROW_H + 0.5);
+      ctx.lineTo(PAD + colW - 16, ry + _RRC.ROW_H + 0.5);
+      ctx.stroke();
     }
 
-    // Encadrement du groupe entier (bandeau + lignes)
-    ctx.strokeStyle = C.BORDER;
-    ctx.lineWidth   = 1;
-    ctx.strokeRect(PAD + 0.5, groupTopY + 0.5, colW - 1, groupH - 1);
+    // Couleur du score : vert = victoire, rouge = défaite, bleu = nul
+    const sa = parseInt(m.scoreAbp, 10);
+    const so = parseInt(m.scoreAdv, 10);
+    let scoreCol = C.SCORE_DRAW;
+    if (!isNaN(sa) && !isNaN(so)) {
+      if      (sa > so) scoreCol = C.SCORE_WIN;
+      else if (sa < so) scoreCol = C.SCORE_LOSE;
+    }
 
-    if (gi < groups.length - 1) y += _RRC.CAT_GAP;
+    _txt(ctx, m.equipe      || "", xTeamLeft, mid, F.TEAM,  C.TEXT,    "left");
+    const fmtScore = s => String(parseInt(s, 10) >= 0 ? parseInt(s, 10) : s).padStart(2, "0");
+    _txt(ctx, `${fmtScore(m.scoreAbp)}  \u2013  ${fmtScore(m.scoreAdv)}`, xScoreCtr, mid, F.SCORE, scoreCol, "center");
+    _txt(ctx, m.adversaire  || "", xOppRight, mid, F.TEAM,  C.TEXT,    "right");
+
+    y += _RRC.ROW_H + _RRC.ROW_GAP;
   }
 
-  // ── Footer ───────────────────────────────────────────────────────
+  // Encadrement du bloc résultats
+  if (matchList.length > 0) {
+    ctx.strokeStyle = C.BORDER;
+    ctx.lineWidth   = 1;
+    ctx.strokeRect(PAD + 0.5, _LC.HDR_H + 12 + 0.5, colW - 1, contentH - 1);
+  }
+
+  // ── 5. Footer ────────────────────────────────────────────────────
   _drawFooter(ctx, W, H, sponsorText);
 
   // ── Export PNG ───────────────────────────────────────────────────
