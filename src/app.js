@@ -169,24 +169,17 @@ function _setupFileHandling() {
   input.addEventListener("change", () => setFile(input.files?.[0]));
 }
 
-function _hasTeamsConfig() {
-  return !!localStorage.getItem("bct_teams");
-}
-
 function _updateGenerateButton() {
   const btn    = document.getElementById("btn-generate");
   const hintEl = document.getElementById("generate-hint");
 
   const needsGoogle = _genMode === "slides";
   const authOk      = !needsGoogle || _isAuthenticated();
-  const teamsOk     = _hasTeamsConfig();
-  const ready       = !!_selectedFile && authOk && teamsOk;
+  const ready       = !!_selectedFile && authOk;
 
   btn.disabled = !ready;
 
-  if (!teamsOk) {
-    hintEl.innerHTML = 'Configuration équipes manquante. <a href="config.html">Importer teams.json →</a>';
-  } else if (!_selectedFile && needsGoogle && !_isAuthenticated()) {
+  if (!_selectedFile && needsGoogle && !_isAuthenticated()) {
     hintEl.textContent = "Connexion Google et fichier Excel requis.";
   } else if (needsGoogle && !_isAuthenticated()) {
     hintEl.textContent = "Connexion Google requise.";
@@ -294,12 +287,6 @@ async function init() {
   setGenMode("local");
   log("Application pr\u00eate.", "info");
 
-  if (!_hasTeamsConfig()) {
-    log(
-      "\u26a0 Configuration \u00e9quipes non charg\u00e9e \u2014 va dans \ud83d\udccb \u00c9quipes & Divisions et importe ton fichier teams.json.",
-      "warn"
-    );
-  }
   if (!cfg.clientId) {
     log(
       "\u26a0 Mode Google Slides : credentials.json introuvable ou sans client_id (mode local non affect\u00e9).",

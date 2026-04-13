@@ -10,9 +10,10 @@
 // ── État global ──────────────────────────────────────────────────────────────
 
 const state = {
-  data:      null,   // objet chargé depuis /api/teams
-  dirty:     false,
-  activeTab: "divisions",
+  data:       null,
+  dirty:      false,
+  activeTab:  "divisions",
+  githubSha:  null,   // SHA du blob GitHub courant (requis pour le commit)
 };
 
 // ── Utilitaires HTML ─────────────────────────────────────────────────────────
@@ -32,13 +33,46 @@ const STORAGE_KEY = "bct_teams";
 // ── API (localStorage — aucun serveur requis) ─────────────────────────────────
 
 async function apiLoad() {
+  // 1. Si un token GitHub est disponible, lire depuis l'API (source de verite + SHA)
+  if (ghToken()) {
+    try {
+      const { data, sha } = await ghReadFile();
+      state.githubSha = sha;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); // cache local
+      return data;
+    } catch (e) {
+      console.warn("[config] Lecture GitHub echouee, fallback local :", e.message);
+    }
+  }
+  // 2. Cache localStorage
   const stored = localStorage.getItem(STORAGE_KEY);
-  if (!stored) return null;
-  return JSON.parse(stored);
+  if (stored) {
+    try { return JSON.parse(stored); } catch (_) {}
+  }
+  // 3. Fichier statique du depot (GitHub Pages)
+  try {
+    const resp = await fetch("config/teams.json");
+    if (resp.ok) return resp.json();
+  } catch (_) {}
+  return null;
 }
 
 async function apiSave(data) {
+  // Toujours mettre a jour le cache localStorage
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+
+  if (ghToken()) {
+    // Si le SHA n'est pas encore connu (ex: import depuis fichier), le recuperer
+    if (!state.githubSha) {
+      const { sha } = await ghReadFile();
+      state.githubSha = sha;
+    }
+    const newSha    = await ghWriteFile(data, state.githubSha);
+    state.githubSha = newSha;
+    return { github: true };
+  }
+
+  return { github: false };
 }
 
 /** Déclenche le téléchargement de la configuration comme fichier teams.json. */
@@ -377,13 +411,17 @@ function addRow(type) {
 
 async function handleSave() {
   const btn = document.getElementById("btn-save");
-  btn.disabled   = true;
+  btn.disabled    = true;
   btn.textContent = "⏳ Enregistrement…";
 
   try {
-    await apiSave(state.data);
+    const result = await apiSave(state.data);
     markDirty(false);
-    showToast("✓  Enregistré dans le navigateur", "ok");
+    if (result.github) {
+      showToast("✓  Commité sur GitHub", "ok");
+    } else {
+      showToast("✓  Enregistré localement (token GitHub non configuré)", "ok");
+    }
   } catch (err) {
     showToast(`Erreur : ${err.message}`, "err");
   } finally {
@@ -392,16 +430,79 @@ async function handleSave() {
   }
 }
 
-// ── Navigation quittée avec modifications non sauvegardées ───────────────────
+// ── Token GitHub ───────────────────────────────────────────────────────────────────
 
-window.addEventListener("beforeunload", e => {
-  if (state.dirty) {
-    e.preventDefault();
-    e.returnValue = "";
+function _updateTokenUI() {
+  const hasToken = !!ghToken();
+  const statusEl = document.getElementById("gh-status");
+  const formEl   = document.getElementById("gh-token-form");
+  if (!statusEl) return;
+  if (hasToken) {
+    statusEl.textContent = "✓ Token configuré \u2014 cliquer pour modifier";
+    statusEl.className   = "gh-status gh-status-ok";
+    formEl.classList.add("hidden");
+  } else {
+    statusEl.textContent = "⚠ Token non configuré \u2014 enregistrement local uniquement";
+    statusEl.className   = "gh-status gh-status-missing";
+    formEl.classList.remove("hidden");
   }
-});
+}
 
-// ── Import / Export fichier ───────────────────────────────────────────────────
+function _setupTokenUI() {
+  _updateTokenUI();
+
+  // Clic sur le statut → toggler le formulaire
+  document.getElementById("gh-status")?.addEventListener("click", () => {
+    document.getElementById("gh-token-form")?.classList.toggle("hidden");
+  });
+
+  // Enregistrer le token
+  document.getElementById("btn-gh-save-token")?.addEventListener("click", () => {
+    const input = document.getElementById("gh-token-input");
+    const val   = input.value.trim();
+    if (!val) { input.focus(); return; }
+    ghSetToken(val);
+    input.value    = "";
+    state.githubSha = null; // forcer relecture du SHA avec le nouveau token
+    _updateTokenUI();
+    showToast("✓ Token GitHub enregistré", "ok");
+  });
+
+  // Supprimer le token
+  document.getElementById("btn-gh-clear-token")?.addEventListener("click", () => {
+    if (!confirm("Supprimer le token GitHub ?\nL'enregistrement se fera uniquement en local.")) return;
+    ghSetToken("");
+    state.githubSha = null;
+    _updateTokenUI();
+    showToast("Token GitHub supprimé", "ok");
+  });
+
+  // Valider le token avec Entrée
+  document.getElementById("gh-token-input")?.addEventListener("keydown", e => {
+    if (e.key === "Enter") document.getElementById("btn-gh-save-token")?.click();
+  });
+}
+
+// ── Initialisation ────────────────────────────────────────────────────────────
+
+async function init() {
+  _setupImportHandler();
+  _setupTokenUI();
+
+  state.data = await apiLoad();
+
+  if (!state.data) {
+    document.getElementById("import-panel").classList.remove("hidden");
+    document.getElementById("main-content").classList.add("hidden");
+    return;
+  }
+
+  document.getElementById("import-panel").classList.add("hidden");
+  document.getElementById("main-content").classList.remove("hidden");
+  _setupUI();
+}
+
+init();
 
 /**
  * Configure l'input file caché et les boutons qui le déclenchent.
@@ -423,7 +524,8 @@ function _setupImportHandler() {
     e.target.value = "";  // reset pour permettre de re-sélectionner le même fichier
     try {
       const text = await file.text();
-      state.data  = JSON.parse(text);
+      state.data      = JSON.parse(text);
+      state.githubSha = null;  // SHA inconnu — sera rafraichi au prochain commit
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data));
       // Si on venait du panneau vide → afficher le contenu principal
       document.getElementById("import-panel").classList.add("hidden");
@@ -490,19 +592,4 @@ function _setupUI() {
   });
 }
 
-async function init() {
-  _setupImportHandler();
 
-  state.data = await apiLoad();
-
-  if (!state.data) {
-    // Aucune donnée dans localStorage → afficher le panneau d'import
-    document.getElementById("import-panel").classList.remove("hidden");
-    document.getElementById("main-content").classList.add("hidden");
-    return;
-  }
-
-  _setupUI();
-}
-
-init();

@@ -39,13 +39,17 @@ function _jsDayToJourFr(jsDay) {
  * Retourne l'objet complet { divisions, adversaires, abp_marker }.
  */
 async function _loadTeamsConfig() {
+  // 1. Modifications utilisateur (page config) en priorité
   const stored = localStorage.getItem("bct_teams");
   if (stored) {
     try { return JSON.parse(stored); } catch (_) {}
   }
+  // 2. Fichier du dépôt (GitHub Pages ou serveur local)
+  const resp = await fetch("config/teams.json");
+  if (resp.ok) return resp.json();
   throw new Error(
-    "Configuration équipes introuvable. " +
-    "Ouvrez « Équipes & Divisions » (icône 📋) et importez votre fichier teams.json."
+    "Impossible de charger config/teams.json (" + resp.status + "). " +
+    "Vérifiez que le fichier est présent dans le dépôt."
   );
 }
 

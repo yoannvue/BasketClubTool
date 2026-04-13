@@ -295,6 +295,48 @@ main {
   border-color: var(--primary);
   color: var(--primary);
 }
+.gh-btn-danger        { color: #c62828; border-color: #f8c2be; }
+.gh-btn-danger:hover  { background: #fdecea; border-color: #c62828; color: #c62828; }
+
+/* ── Barre GitHub Token ───────────────────────────────────── */
+.gh-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+.gh-bar-label {
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.gh-status {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  user-select: none;
+}
+.gh-status-ok      { background: #e6f4ea; color: #2e7d32; }
+.gh-status-missing { background: #fff3e0; color: #e65100; }
+.gh-token-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.gh-token-input {
+  width: 280px;
+  font-family: "Courier New", Consolas, monospace;
+  font-size: 12px;
+  letter-spacing: .03em;
+}
 
 /* ── Badges type de match (divisions) ────────────────────── */
 .type-badge {

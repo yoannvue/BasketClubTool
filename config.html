@@ -30,6 +30,20 @@
       <button id="btn-export" class="btn-outline btn-sm" title="Télécharger teams.json">📥 Télécharger</button>
       <button id="btn-save" class="btn-primary btn-sm">💾&nbsp; Enregistrer</button>
     </div>
+
+    <!-- Barre GitHub Token -->
+    <div class="gh-bar" id="gh-bar">
+      <span class="gh-bar-label">🔗 GitHub :</span>
+      <span id="gh-status" class="gh-status" role="button" tabindex="0"></span>
+      <div id="gh-token-form" class="gh-token-form">
+        <input type="password" id="gh-token-input" class="input-inline gh-token-input"
+               placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+               autocomplete="new-password" spellcheck="false">
+        <button id="btn-gh-save-token" class="btn-outline btn-sm">✓ Enregistrer</button>
+        <button id="btn-gh-clear-token" class="btn-outline btn-sm gh-btn-danger">Supprimer</button>
+      </div>
+    </div>
+
     <!-- Input fichier caché (déclenché par les boutons d'import) -->
     <input type="file" id="import-file-input" class="hidden" accept=".json">
 
@@ -115,6 +129,7 @@
   <!-- Toast -->
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
+  <script src="src/github-api.js"></script>
   <script src="src/config.js"></script>
 </body>
 </html>
