@@ -1,46 +1,267 @@
 {
   "divisions": {
-    "DFU9":     "U9F",
-    "DXU9":     "U9M",
-    "DFU11":    "U11F",
-    "DMU11":    "U11M",
-    "DFU13":    "U13F",
-    "DMU13":    "U13M",
-    "DFU15":    "U15F",
-    "DMU15":    "U15M",
-    "DFU18":    "U18F",
-    "DMU18":    "U18M",
-    "IRMU18":   "U18M",
-    "DM2":      "SENIORS",
-    "AMILOISIRS": "LOISIRS"
+    "AMILOISIRS": {
+      "categorie": "LOISIRS",
+      "type": "AMICAL"
+    },
+    "AMISM": {
+      "categorie": "SENIORS",
+      "type": "AMICAL"
+    },
+    "AMIU11M": {
+      "categorie": "U11M",
+      "type": "AMICAL"
+    },
+    "AMIU13F": {
+      "categorie": "U13F",
+      "type": "AMICAL"
+    },
+    "AMIU13M": {
+      "categorie": "U13M",
+      "type": "AMICAL"
+    },
+    "AMIU15F": {
+      "categorie": "U15F",
+      "type": "AMICAL"
+    },
+    "AMIU15M": {
+      "categorie": "U15M",
+      "type": "AMICAL"
+    },
+    "AMIU18F": {
+      "categorie": "U18F",
+      "type": "AMICAL"
+    },
+    "AMIU18M": {
+      "categorie": "U18M",
+      "type": "AMICAL"
+    },
+    "AMIU9": {
+      "categorie": "U9",
+      "type": "AMICAL"
+    },
+    "CDSU11F 1er tour": {
+      "categorie": "U11F",
+      "type": "COUPE"
+    },
+    "CDSU11M 1er tour": {
+      "categorie": "U11M",
+      "type": "COUPE"
+    },
+    "CDSU13M 1er Tour": {
+      "categorie": "U13M",
+      "type": "COUPE"
+    },
+    "CDSU15M 1er tour": {
+      "categorie": "U15M",
+      "type": "COUPE"
+    },
+    "CDSU18F - 1er Tour": {
+      "categorie": "U18F",
+      "type": "COUPE"
+    },
+    "DFU11-2-P2": {
+      "categorie": "U11F",
+      "type": "CHAMPIONNAT"
+    },
+    "DFU11-8": {
+      "categorie": "U11F",
+      "type": "CHAMPIONNAT"
+    },
+    "DFU11-8-P2-P2": {
+      "categorie": "U11F",
+      "type": "CHAMPIONNAT"
+    },
+    "DFU13-2-P2": {
+      "categorie": "U13F",
+      "type": "CHAMPIONNAT"
+    },
+    "DFU13-2-P2-P2": {
+      "categorie": "U13F",
+      "type": "CHAMPIONNAT"
+    },
+    "DFU15-2-P2": {
+      "categorie": "U15F",
+      "type": "CHAMPIONNAT"
+    },
+    "DFU15-5-P2-P2": {
+      "categorie": "U15F",
+      "type": "CHAMPIONNAT"
+    },
+    "DFU18-2": {
+      "categorie": "U18F",
+      "type": "CHAMPIONNAT"
+    },
+    "DFU18-2-P2": {
+      "categorie": "U18F",
+      "type": "CHAMPIONNAT"
+    },
+    "DFU18-2-P2-P2": {
+      "categorie": "U18F",
+      "type": "CHAMPIONNAT"
+    },
+    "DFU9-9": {
+      "categorie": "U9F",
+      "type": "CHAMPIONNAT"
+    },
+    "DFU9-9-P2": {
+      "categorie": "U9F",
+      "type": "CHAMPIONNAT"
+    },
+    "DFU9-9-P2-P2": {
+      "categorie": "U9F",
+      "type": "CHAMPIONNAT"
+    },
+    "DM2": {
+      "categorie": "SENIORS",
+      "type": "CHAMPIONNAT"
+    },
+    "DMU11-8": {
+      "categorie": "U11M",
+      "type": "CHAMPIONNAT"
+    },
+    "DMU11-8-P2": {
+      "categorie": "U11M",
+      "type": "CHAMPIONNAT"
+    },
+    "DMU11-8-P2-P2-P2": {
+      "categorie": "U11M",
+      "type": "CHAMPIONNAT"
+    },
+    "DMU13": {
+      "categorie": "U13M",
+      "type": "CHAMPIONNAT"
+    },
+    "DMU13-2-P2": {
+      "categorie": "U13M",
+      "type": "CHAMPIONNAT"
+    },
+    "DMU13-4": {
+      "categorie": "U13M",
+      "type": "CHAMPIONNAT"
+    },
+    "DMU13-4-P2": {
+      "categorie": "U13M",
+      "type": "CHAMPIONNAT"
+    },
+    "DMU13-4-P2-P2": {
+      "categorie": "U13M",
+      "type": "CHAMPIONNAT"
+    },
+    "DMU15-2-P2": {
+      "categorie": "U15M",
+      "type": "CHAMPIONNAT"
+    },
+    "DMU15-2-P2-P2": {
+      "categorie": "U15M",
+      "type": "CHAMPIONNAT"
+    },
+    "DMU18-2-P2": {
+      "categorie": "U18M",
+      "type": "CHAMPIONNAT"
+    },
+    "DMU18-3": {
+      "categorie": "U18M",
+      "type": "CHAMPIONNAT"
+    },
+    "DMU18-3-P2-P2": {
+      "categorie": "U18M",
+      "type": "CHAMPIONNAT"
+    },
+    "DXU9-9": {
+      "categorie": "U9M",
+      "type": "CHAMPIONNAT"
+    },
+    "DXU9-9-P2": {
+      "categorie": "U9M",
+      "type": "CHAMPIONNAT"
+    },
+    "DXU9-9-P2-P2": {
+      "categorie": "U9M",
+      "type": "CHAMPIONNAT"
+    },
+    "IRMU15": {
+      "categorie": "U15M",
+      "type": "CHAMPIONNAT"
+    },
+    "IRMU18": {
+      "categorie": "U18M",
+      "type": "CHAMPIONNAT"
+    },
+    "IRMU18-P2": {
+      "categorie": "U18M",
+      "type": "CHAMPIONNAT"
+    },
+    "IRMU18-P2-P2": {
+      "categorie": "U18M",
+      "type": "CHAMPIONNAT"
+    },
+    "RFU13-2": {
+      "categorie": "U13F",
+      "type": "CHAMPIONNAT"
+    },
+    "RMU13-2": {
+      "categorie": "U13M",
+      "type": "CHAMPIONNAT"
+    },
+    "CDSU18M 1T": {
+      "categorie": "U18M",
+      "type": "COUPE"
+    },
+    "CDSSG 1T": {
+      "categorie": "SENIORS",
+      "type": "COUPE"
+    },
+    "CDSU15M 1/4": {
+      "categorie": "U15M",
+      "type": "COUPE"
+    },
+    "CDSU11M 1/4": {
+      "categorie": "U11M",
+      "type": "COUPE"
+    }
   },
   "adversaires": {
+    "ARRAS PAYS D'ARTOIS BASKET": "ARRAS",
+    "JEUNESSE BASKET CLUB AUBY": "AUBY",
+    "AVELIN BASKET CLUB PONT-A-MARCQ": "AVELIN BC",
+    "BEUVRAGES USM": "BEUVRAGES",
+    "BRILLON BASKET COMPETITION ET LOISIR": "BRILLON",
+    "IE - CTC CAMBRESIS UNION BASKET - CAMBRAI BASKET": "CAMBRAI",
+    "CRESPINOISE BB": "CRESPIN",
+    "CYSOING SAINGHIN BOUVINES BASKET": "CYSOING",
+    "UNION DECHY SIN BASKET": "DECHY SIN",
     "ASC DENAIN VOLTAIRE PORTE DU HAINAUT": "DENAIN",
-    "BASKET CLUB PEVELE":                   "PEVELE",
-    "UNION SPORTIVE MAUBEUGE BASKET BALL":  "MAUBEUGE",
-    "CO TRITH BASKET PORTE DU HAINAUT":     "TRITH",
-    "JEUNESSE BASKET CLUB AUBY":            "AUBY",
-    "LOOSSOIS BASKET CLUB":                 "LOOS",
-    "SOISSONS CUFFIES AISNE B.B":           "SOISSONS",
-    "SAINGHIN WEPPES LCJMPT":               "SAINGHIN",
-    "AVENIR BASKET FLERSOIS":               "FLERSOIS",
-    "UNION DECHY SIN BASKET":               "DECHY SIN",
-    "RAIMBEAUCOURT CSL":                    "RAIMBEAUCOURT",
-    "FLINES LEZ RACHES BC":                 "FLINES",
-    "LILLE-EST BASKET":                     "LILLE-EST",
-    "LILLE BASKET":                         "LILLE",
-    "GAYANT BASKET":                        "GAYANT",
-    "PHALEMPIN B C":                        "PHALEMPIN",
-    "OSTRICOURT ABC":                       "OSTRICOURT",
-    "LOUVROIL ASG":                         "LOUVROIL",
-    "CUINCY ASB":                           "CUINCY ASB",
-    "SECLIN BC":                            "SECLIN BC",
-    "MOUVAUX ABC":                          "MOUVAUX ABC",
-    "HERIN FJEP":                           "HERIN FJEP",
-    "ST AMAND P H":                         "ST AMAND",
-    "SOLESMES BC":                          "SOLESMES BC",
-    "BREBIERES BC":                         "BREBIERES BC",
-    "BOUCHAIN BC":                          "BOUCHAIN BC"
-  },
-  "abp_marker": "AMICALE BASKET PECQUENCOURT"
+    "DORIGNIES DOUAI AAE": "DORIGNIES",
+    "AVENIR BASKET FLERSOIS": "FLERS",
+    "FLINES LEZ RACHES BC": "FLINES LEZ RACHES",
+    "GAYANT BASKET": "GAYANT",
+    "HELESMES SPORTING CLUB": "HELESMES SC",
+    "HELLEMMES LILLE BFC": "HELLEMMES LILLE",
+    "HORNAINGEOIS BC": "HORNAING",
+    "LAMBERSART B L M - 2": "LAMBERSART",
+    "LAMBRES BASKET CLUB": "LAMBRES BC",
+    "LOMME BASKET CLUB (LBC)": "LOMME BC",
+    "LOOSSOIS BASKET CLUB": "LOOS",
+    "NEUVILLE EN FERRAIN PP": "NEUVILLE EN F.",
+    "ONNAING JA": "ONNAING",
+    "OSTREVENT BASKET BALL EAA MONCHECOURT": "OSTREVENT",
+    "OSTRICOURT ABC": "OSTRICOURT",
+    "BASKET CLUB PEVELE": "PEVELE",
+    "RAIMBEAUCOURT CSL": "RAIMBEAUCOURT",
+    "RAISMES AS": "RAISMES",
+    "USAC SOMAIN MARCHIENNES BASKETBALL": "SOMAIN",
+    "THUMERIES A G": "THUMERIES",
+    "CO TRITH BASKET PORTE DU HAINAUT": "TRITH",
+    "VILLENEUVE D'ASCQ ESB": "VILLENEUVE D'ASCQ",
+    "WATTIGNIES/TEMPLEMARS AS": "WATTIGNIES",
+    "BASKET CLUB DOUCHY": "BC DOUCHY",
+    "MARCQ EN BAROEUL ASJ": "MARCQ EN BAROEUL",
+    "ACADEMIE DE BASKET CATESIENNE": "LE CATEAU",
+    "ETOILE SPORTIVE ISBERGUES": "ISBERGUES",
+    "UNION SPORTIVE MAUBEUGE BASKET BALL": "MAUBEUGE",
+    "BASKET CLUB ASSEVENT BOUSSOIS RECQUIGNIES": "ASSEVENT BOUSSOIS",
+    "WALINCOURT SELVIGNY BASKET AVENIR": "WALINCOURT SELVIGNY",
+    "ASSOCIATION SPORTIVE BASKET LOURCHOIS": "LOURCHES"
+  }
 }

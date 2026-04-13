@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Basket Club Tool — ABP</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- SheetJS pour parser les fichiers Excel -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <!-- Google Identity Services pour l'OAuth navigateur -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+
+  <!-- ── En-tête ─────────────────────────────────────── -->
+  <header>
+    <div class="header-inner">
+      <span class="logo">🏀</span>
+      <div class="header-titles">
+        <h1>Basket Club Tool</h1>
+        <span class="subtitle">Amicale Basket Pecquencourt</span>
+      </div>
+      <a href="config.html" class="btn-icon" title="Équipes &amp; Divisions"
+         style="text-decoration:none; font-size:16px;">📋</a>
+      <button id="btn-settings" class="btn-icon" title="Paramètres">⚙</button>
+    </div>
+  </header>
+
+  <!-- ── Contenu principal ─────────────────────────────── -->
+  <main>
+
+    <!-- Étape 1 : Connexion Google -->
+    <section class="card" id="section-auth">
+      <h2>1 · Connexion Google</h2>
+      <p class="hint">
+        Nécessaire pour copier le template Slides, remplir les données, et uploader sur Drive.
+      </p>
+      <button id="btn-auth" class="btn-primary">Se connecter avec Google</button>
+      <div id="auth-status" class="status"></div>
+    </section>
+
+    <!-- Étape 2 : Fichier Excel -->
+    <section class="card" id="section-upload">
+      <h2>2 · Fichier ProchainesRencontres</h2>
+      <div id="drop-zone" class="drop-zone">
+        <span class="drop-icon">📂</span>
+        <p>Glissez <strong>ProchainesRencontres.xlsx</strong> ici</p>
+        <p class="or">— ou —</p>
+        <label class="btn-secondary">
+          Choisir un fichier
+          <input type="file" id="file-input" accept=".xlsx,.xls" hidden>
+        </label>
+        <p id="file-name" class="file-chosen"></p>
+      </div>
+    </section>
+
+    <!-- Étape 3 : Génération -->
+    <section class="card" id="section-generate">
+      <h2>3 · Générer l'affiche planning</h2>
+      <p class="hint" id="generate-hint">
+        Connexion Google et fichier Excel requis.
+      </p>
+      <button id="btn-generate" class="btn-primary btn-big" disabled>
+        🖼&nbsp; Générer l'affiche planning
+      </button>
+    </section>
+
+    <!-- Résultat -->
+    <div id="result-area" class="card result-area hidden">
+      <h2>✅ Affiche générée</h2>
+      <img id="result-img" src="" alt="Affiche planning générée" class="result-img">
+      <div class="result-actions">
+        <a id="btn-download" class="btn-primary" download="affiche_planning.png">⬇&nbsp; Télécharger PNG</a>
+        <a id="btn-drive" class="btn-secondary" href="#" target="_blank" rel="noopener">
+          📁&nbsp; Voir sur Drive
+        </a>
+      </div>
+    </div>
+
+    <!-- Journal -->
+    <section class="card" id="section-log">
+      <h2>Journal</h2>
+      <div id="log" class="log" role="log" aria-live="polite"></div>
+    </section>
+
+  </main>
+
+  <!-- ── Modale Paramètres ──────────────────────────────── -->
+  <div id="modal-settings" class="modal hidden" role="dialog" aria-modal="true"
+       aria-labelledby="modal-title">
+    <div class="modal-content">
+      <h2 id="modal-title">⚙&nbsp; Paramètres</h2>
+
+      <p class="hint">
+        Renseigne l'<strong>ID Client OAuth Web</strong> créé dans Google Cloud Console
+        (type « Application Web », origin <code>http://localhost:8080</code>).
+      </p>
+
+      <label>
+        Client ID Google OAuth
+        <input type="text" id="cfg-client-id"
+               placeholder="123456789-xyz.apps.googleusercontent.com"
+               autocomplete="off" spellcheck="false">
+      </label>
+
+      <label>
+        ID Template Slides — Planning
+        <input type="text" id="cfg-template-planning"
+               placeholder="ID de la présentation Google Slides"
+               autocomplete="off" spellcheck="false">
+      </label>
+
+      <label>
+        ID Dossier Drive (destination PNG)
+        <input type="text" id="cfg-drive-folder"
+               placeholder="ID du dossier Google Drive"
+               autocomplete="off" spellcheck="false">
+      </label>
+
+      <div class="modal-actions">
+        <button id="btn-settings-save" class="btn-primary">Enregistrer</button>
+        <button id="btn-settings-cancel" class="btn-secondary">Annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Scripts ────────────────────────────────────────── -->
+  <script src="transform.js"></script>
+  <script src="slides.js"></script>
+  <script src="app.js"></script>
+
+</body>
+</html>
