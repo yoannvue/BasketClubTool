@@ -1,0 +1,10 @@
+{
+  "drive_folder_id": "",
+  "template_planning_id": "",
+  "template_results_id": "",
+  "_help": {
+    "drive_folder_id": "ID du dossier Google Drive cible. Ex: depuis https://drive.google.com/drive/folders/CECI_EST_L_ID",
+    "template_planning_id": "ID de la présentation Google Slides servant de template pour l'affiche planning. Ex: depuis https://docs.google.com/presentation/d/CECI_EST_L_ID/edit",
+    "template_results_id": "ID de la présentation Google Slides servant de template pour l'affiche résultats."
+  }
+}
