@@ -219,6 +219,10 @@
     "CDSU11M 1/4": {
       "categorie": "U11M",
       "type": "COUPE"
+    },
+    "TEST": {
+      "categorie": "TEST",
+      "type": "CHAMPIONNAT"
     }
   },
   "adversaires": {
