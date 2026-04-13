@@ -15,6 +15,9 @@
 
 const CONFIG_KEYS = ["clientId", "templatePlanningId", "driveFolderId"];
 
+// Mode de génération : "local" (canvas) ou "slides" (Google Slides API)
+let _genMode = "local";
+
 function loadConfig() {
   return Object.fromEntries(
     CONFIG_KEYS.map(k => [k, localStorage.getItem(`bct_${k}`) || ""])
@@ -67,6 +70,18 @@ async function tryAutoLoadConfig() {
   }
 
   if (changed) saveConfig(cfg);
+}
+
+// ── Mode de génération ────────────────────────────────────────────────
+
+function setGenMode(mode) {
+  _genMode = mode;
+  document.getElementById("btn-mode-local") .classList.toggle("active", mode === "local");
+  document.getElementById("btn-mode-slides").classList.toggle("active", mode === "slides");
+  document.getElementById("section-auth")   .classList.toggle("hidden", mode === "local");
+  document.getElementById("mode-desc-local") .classList.toggle("hidden", mode !== "local");
+  document.getElementById("mode-desc-slides").classList.toggle("hidden", mode !== "slides");
+  _updateGenerateButton();
 }
 
 // ── Journal ──────────────────────────────────────────────────────────────────
@@ -187,15 +202,18 @@ function _setupFileHandling() {
 }
 
 function _updateGenerateButton() {
-  const btn     = document.getElementById("btn-generate");
-  const hintEl  = document.getElementById("generate-hint");
-  const ready   = _selectedFile && _isAuthenticated();
+  const btn    = document.getElementById("btn-generate");
+  const hintEl = document.getElementById("generate-hint");
+
+  const needsGoogle = _genMode === "slides";
+  const authOk      = !needsGoogle || _isAuthenticated();
+  const ready       = !!_selectedFile && authOk;
 
   btn.disabled = !ready;
 
-  if (!_selectedFile && !_isAuthenticated()) {
+  if (!_selectedFile && needsGoogle && !_isAuthenticated()) {
     hintEl.textContent = "Connexion Google et fichier Excel requis.";
-  } else if (!_isAuthenticated()) {
+  } else if (needsGoogle && !_isAuthenticated()) {
     hintEl.textContent = "Connexion Google requise.";
   } else if (!_selectedFile) {
     hintEl.textContent = "Sélectionne le fichier ProchainesRencontres.xlsx.";
@@ -208,7 +226,7 @@ function _updateGenerateButton() {
 
 async function handleGenerate() {
   if (!_selectedFile) { log("Aucun fichier sélectionné.", "err"); return; }
-  if (!_isAuthenticated()) { log("Non connecté à Google.", "err"); return; }
+  if (_genMode === "slides" && !_isAuthenticated()) { log("Non connecté à Google.", "err"); return; }
 
   const btn = document.getElementById("btn-generate");
   btn.disabled = true;
@@ -231,15 +249,21 @@ async function handleGenerate() {
       return;
     }
 
-    // ── 2. Génération affiche via Slides API ──
-    const config = loadConfig();
-    const { blob, driveUrl } = await generatePlanningImage(
-      domicileList,
-      exterieurList,
-      weekLabel,
-      config,
-      log
-    );
+    // ── 2. Génération de l'affiche ──
+    let blob, driveUrl = null;
+
+    if (_genMode === "local") {
+      log("Génération locale (Canvas)…", "info");
+      blob = await generatePlanningImageLocal(domicileList, exterieurList, weekLabel);
+      log("Affiche générée localement.", "ok");
+    } else {
+      const config = loadConfig();
+      const result = await generatePlanningImage(
+        domicileList, exterieurList, weekLabel, config, log
+      );
+      blob     = result.blob;
+      driveUrl = result.driveUrl;
+    }
 
     // ── 3. Affichage du résultat ──
     const blobUrl    = URL.createObjectURL(blob);
@@ -267,7 +291,8 @@ async function handleGenerate() {
     log(`Erreur : ${err.message || String(err)}`, "err");
     console.error("Erreur génération affiche planning :", err);
   } finally {
-    btn.disabled = !(_selectedFile && _isAuthenticated());
+    const authOk = _genMode === "local" || _isAuthenticated();
+    btn.disabled = !(_selectedFile && authOk);
   }
 }
 
@@ -326,11 +351,13 @@ async function init() {
 
   // 3. Mise en place des listeners
   _setupFileHandling();
-  document.getElementById("btn-auth").addEventListener("click", requestAuth);
-  document.getElementById("btn-generate").addEventListener("click", handleGenerate);
-  document.getElementById("btn-settings").addEventListener("click", openSettings);
-  document.getElementById("btn-settings-save").addEventListener("click", saveSettings);
+  document.getElementById("btn-auth")          .addEventListener("click", requestAuth);
+  document.getElementById("btn-generate")      .addEventListener("click", handleGenerate);
+  document.getElementById("btn-settings")      .addEventListener("click", openSettings);
+  document.getElementById("btn-settings-save") .addEventListener("click", saveSettings);
   document.getElementById("btn-settings-cancel").addEventListener("click", closeSettings);
+  document.getElementById("btn-mode-local")    .addEventListener("click", () => setGenMode("local"));
+  document.getElementById("btn-mode-slides")   .addEventListener("click", () => setGenMode("slides"));
 
   // Fermeture modale en cliquant sur l'overlay
   document.getElementById("modal-settings").addEventListener("click", e => {
@@ -343,18 +370,12 @@ async function init() {
   });
 
   // 4. État initial
-  _updateGenerateButton();
+  setGenMode("local");   // mode local par défaut (pas de Google requis)
   log("Application prête.", "info");
 
   if (!cfg.clientId) {
     log(
-      "⚠ Client ID Google non configuré. Ouvre les paramètres ⚙ pour le renseigner.",
-      "warn"
-    );
-  }
-  if (!cfg.templatePlanningId) {
-    log(
-      "⚠ ID du template Slides non configuré. Ouvre les paramètres ⚙.",
+      "⚠ Mode Google Slides : Client ID non configuré. Passe par les paramètres ⚙ si nécessaire.",
       "warn"
     );
   }

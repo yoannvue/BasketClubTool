@@ -29,8 +29,8 @@
   <!-- ── Contenu principal ─────────────────────────────── -->
   <main>
 
-    <!-- Étape 1 : Connexion Google -->
-    <section class="card" id="section-auth">
+    <!-- Étape 1 : Connexion Google (affiché uniquement en mode Google Slides) -->
+    <section class="card hidden" id="section-auth">
       <h2>1 · Connexion Google</h2>
       <p class="hint">
         Nécessaire pour copier le template Slides, remplir les données, et uploader sur Drive.
@@ -57,9 +57,26 @@
     <!-- Étape 3 : Génération -->
     <section class="card" id="section-generate">
       <h2>3 · Générer l'affiche planning</h2>
-      <p class="hint" id="generate-hint">
-        Connexion Google et fichier Excel requis.
+
+      <!-- Sélecteur de mode -->
+      <div class="mode-toggle" role="group" aria-label="Mode de génération">
+        <button id="btn-mode-local" class="mode-btn active" data-mode="local">
+          🖥&nbsp; Génération locale
+          <span class="mode-badge">Hors-ligne</span>
+        </button>
+        <button id="btn-mode-slides" class="mode-btn" data-mode="slides">
+          🔗&nbsp; Google Slides
+          <span class="mode-badge">Fidèle au template</span>
+        </button>
+      </div>
+      <p class="mode-desc" id="mode-desc-local">
+        Génère l'image directement dans le navigateur. Aucune connexion Google requise.
       </p>
+      <p class="mode-desc hidden" id="mode-desc-slides">
+        Utilise ton template Google Slides. Nécessite une connexion Google et l'ID du template configuré.
+      </p>
+
+      <p class="hint" id="generate-hint"></p>
       <button id="btn-generate" class="btn-primary btn-big" disabled>
         🖼&nbsp; Générer l'affiche planning
       </button>
@@ -127,6 +144,7 @@
   <!-- ── Scripts ────────────────────────────────────────── -->
   <script src="transform.js"></script>
   <script src="slides.js"></script>
+  <script src="local-render.js"></script>
   <script src="app.js"></script>
 
 </body>

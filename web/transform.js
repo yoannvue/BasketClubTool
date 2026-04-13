@@ -34,11 +34,16 @@ function _jsDayToJourFr(jsDay) {
 // ── Chargement des référentiels ─────────────────────────────────────────────
 
 /**
- * Charge teams.json via l'API locale /api/teams.
+ * Charge teams.json.
+ * Essaie d'abord l'API locale /api/teams (server.py),
+ * puis se rabat sur ../config/teams.json (http.server basique).
  * Retourne l'objet complet { divisions, adversaires, abp_marker }.
  */
 async function _loadTeamsConfig() {
-  const resp = await fetch("/api/teams");
+  let resp = await fetch("/api/teams");
+  if (!resp.ok) {
+    resp = await fetch("../config/teams.json");
+  }
   if (!resp.ok) throw new Error(`Impossible de charger teams.json (${resp.status})`);
   return resp.json();
 }

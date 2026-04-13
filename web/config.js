@@ -28,13 +28,13 @@ function escHtml(str) {
 // ── API ──────────────────────────────────────────────────────────────────────
 
 async function apiLoad() {
-  const resp = await fetch("/api/teams");
+  const resp = await fetch("/config/teams");
   if (!resp.ok) throw new Error(`Lecture teams.json impossible (HTTP ${resp.status})`);
   return resp.json();
 }
 
 async function apiSave(data) {
-  const resp = await fetch("/api/teams", {
+  const resp = await fetch("/config/teams", {
     method:  "POST",
     headers: { "Content-Type": "application/json" },
     body:    JSON.stringify(data),
