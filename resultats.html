@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Basket Club Tool — ABP</title>
+  <title>Résultats — Basket Club Tool ABP</title>
   <link rel="stylesheet" href="css/style.css">
-  <!-- SheetJS pour parser les fichiers Excel -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -18,22 +17,22 @@
         <h1>Basket Club Tool</h1>
         <span class="subtitle">Amicale Basket Pecquencourt</span>
       </div>
-      <a href="config.html" class="btn-icon" title="Équipes &amp; Divisions"
-         style="text-decoration:none; font-size:16px;">📋</a>
-      <a href="resultats.html" class="btn-icon" title="Affiche résultats"
-         style="text-decoration:none; font-size:16px;">🏆</a>
+      <nav class="header-nav">
+        <a href="index.html"   class="btn-icon" title="Planning">📅</a>
+        <a href="config.html"  class="btn-icon" title="Équipes &amp; Divisions">📋</a>
+      </nav>
     </div>
   </header>
 
   <!-- ── Contenu principal ─────────────────────────────── -->
   <main>
 
-    <!-- Étape 1 : Fichier Excel -->
+    <!-- Fichier Excel résultats -->
     <section class="card" id="section-upload">
-      <h2>Fichier Rencontres FBI </h2>
+      <h2>Fichier Résultats</h2>
       <div id="drop-zone" class="drop-zone">
         <span class="drop-icon">📂</span>
-        <p>Glissez <strong>Fichier Excel</strong> ici</p>
+        <p>Glissez <strong>ResultatsDeLasemaine.xlsx</strong> ici</p>
         <p class="or">— ou —</p>
         <label class="btn-secondary">
           Choisir un fichier
@@ -43,35 +42,40 @@
       </div>
     </section>
 
-    <!-- Étape 3 : Génération -->
+    <!-- Génération -->
     <section class="card" id="section-generate">
-      <h2>Générer l'affiche planning</h2>
+      <h2>Générer l'affiche résultats</h2>
 
-      <!-- Sélecteur de mise en page -->
-      <div class="layout-toggle" id="section-layout" role="group" aria-label="Mise en page">
-        <span class="layout-label">Mise en page :</span>
-        <button id="btn-layout-paysage" class="layout-btn active">🖼&nbsp; Paysage</button>
-        <button id="btn-layout-portrait" class="layout-btn">📄&nbsp; Portrait</button>
-      </div>
-
-      <!-- Sélecteur de fond d'affiche -->
+      <!-- Sélecteur de fond -->
       <div class="bg-picker-row">
         <span class="layout-label">Fond d'affiche :</span>
         <div id="bg-picker" class="bg-picker"></div>
       </div>
 
+      <!-- Sponsor (footer) -->
+      <div class="sponsor-row">
+        <span class="layout-label">Sponsor (footer) :</span>
+        <input
+          type="text"
+          id="sponsor-input"
+          class="sponsor-input"
+          placeholder="Laissez vide pour afficher un espace réservé"
+          maxlength="80"
+        >
+      </div>
+
       <p class="hint" id="generate-hint"></p>
       <button id="btn-generate" class="btn-primary btn-big" disabled>
-        🖼&nbsp; Générer l'affiche planning
+        🏆&nbsp; Générer l'affiche résultats
       </button>
     </section>
 
     <!-- Résultat -->
     <div id="result-area" class="card result-area hidden">
       <h2>✅ Affiche générée</h2>
-      <img id="result-img" src="" alt="Affiche planning générée" class="result-img">
+      <img id="result-img" src="" alt="Affiche résultats générée" class="result-img">
       <div class="result-actions">
-        <a id="btn-download" class="btn-primary" download="affiche_planning.png">⬇&nbsp; Télécharger PNG</a>
+        <a id="btn-download" class="btn-primary" download="affiche_resultats.png">⬇&nbsp; Télécharger PNG</a>
       </div>
     </div>
 
@@ -83,10 +87,12 @@
 
   </main>
 
-  <!-- ── Scripts ────────────────────────────────────────── -->
+  <!-- ── Scripts (ordre de dépendances) ────────────────── -->
   <script src="src/transform.js"></script>
   <script src="src/local-render.js"></script>
-  <script src="src/app.js"></script>
+  <script src="src/results-transform.js"></script>
+  <script src="src/results-render.js"></script>
+  <script src="src/results-app.js"></script>
 
 </body>
 </html>
