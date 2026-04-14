@@ -357,3 +357,137 @@ main {
 select.input-inline {
   cursor: pointer;
 }
+
+/* ── Page fonds.html — gestion des backgrounds ──────────── */
+.bg-mgr-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 24px 0 14px;
+}
+.bg-mgr-header h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bg-mgr-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.bg-empty {
+  text-align: center;
+  color: var(--muted);
+  font-style: italic;
+  padding: 36px 0;
+}
+
+.bg-mgr-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  transition: box-shadow .15s;
+}
+.bg-mgr-card:hover { box-shadow: 0 2px 10px rgba(31,78,121,.12); }
+
+.bg-mgr-thumb {
+  width: 90px;
+  height: 60px;
+  border-radius: 6px;
+  background: #e4edf7 center/cover no-repeat;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+
+.bg-mgr-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bg-mgr-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bg-mgr-filename {
+  font-size: 11px;
+  font-family: "Courier New", Consolas, monospace;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bg-mgr-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+/* ── Panneau ajout fond ──────────────────────────────────── */
+.bg-add-panel {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 6px rgba(0,0,0,.06);
+}
+.bg-add-form h3 {
+  margin: 0 0 16px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+.bg-add-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.bg-add-field-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.bg-add-preview {
+  width: 160px;
+  height: 110px;
+  border-radius: 8px;
+  background: #e4edf7 center/cover no-repeat;
+  border: 1px dashed var(--border);
+  margin: 2px 0;
+}
+.bg-add-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+.add-progress {
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+}

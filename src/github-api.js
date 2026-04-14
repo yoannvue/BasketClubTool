@@ -119,3 +119,90 @@ async function ghWriteFile(data, sha) {
   const result = await resp.json();
   return result.content.sha;
 }
+
+// ── API generique (chemin arbitraire) ─────────────────────────────────────────
+
+/**
+ * Lit n'importe quel fichier JSON du depot.
+ * Retourne { data: Object, sha: string }.
+ */
+async function ghReadJsonFile(path) {
+  const url  = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`;
+  const resp = await fetch(url, { headers: _ghHeaders() });
+  if (!resp.ok) {
+    const body = await resp.json().catch(() => ({}));
+    throw new Error(body.message || `Lecture GitHub echouee (HTTP ${resp.status}).`);
+  }
+  const json    = await resp.json();
+  const content = JSON.parse(_fromBase64(json.content));
+  return { data: content, sha: json.sha };
+}
+
+/**
+ * Ecrit n'importe quel objet JSON dans le depot (PUT /contents/{path}).
+ * sha : null ou undefined si le fichier n'existe pas encore.
+ * Retourne le SHA du nouveau blob.
+ */
+async function ghWriteJsonFile(path, data, sha, message) {
+  if (!ghToken()) throw new Error("Token GitHub non configure.");
+  const url     = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`;
+  const content = _toBase64(JSON.stringify(data, null, 2));
+  const body    = { message: message || `Mise a jour ${path}`, content };
+  if (sha) body.sha = sha;
+
+  const resp = await fetch(url, {
+    method:  "PUT",
+    headers: { ..._ghHeaders(), "Content-Type": "application/json" },
+    body:    JSON.stringify(body),
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.message || `Commit GitHub echoue (HTTP ${resp.status}).`);
+  }
+  return (await resp.json()).content.sha;
+}
+
+/**
+ * Upload un fichier binaire (image) dans le depot.
+ * file : objet File (input[type=file]).
+ * path : chemin relatif dans le depot (ex: "ressources/fonds/fond10.png").
+ * Retourne le SHA du nouveau blob.
+ * Si le fichier existe deja, il est ecrase (le SHA existant est recupere automatiquement).
+ */
+async function ghUploadFile(path, file) {
+  if (!ghToken()) throw new Error("Token GitHub non configure.");
+
+  // Lit le contenu binaire du fichier
+  const arrayBuf = await file.arrayBuffer();
+  const bytes    = new Uint8Array(arrayBuf);
+  let binary = "";
+  for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+  const b64 = btoa(binary);
+
+  const url = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`;
+
+  // Verifier si le fichier existe deja (pour obtenir son SHA)
+  let existingSha = undefined;
+  const checkResp = await fetch(url, { headers: _ghHeaders() });
+  if (checkResp.ok) {
+    const info = await checkResp.json();
+    existingSha = info.sha;
+  }
+
+  const body = {
+    message: `Ajout fond ${file.name}`,
+    content: b64,
+  };
+  if (existingSha) body.sha = existingSha;
+
+  const resp = await fetch(url, {
+    method:  "PUT",
+    headers: { ..._ghHeaders(), "Content-Type": "application/json" },
+    body:    JSON.stringify(body),
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.message || `Upload GitHub echoue (HTTP ${resp.status}).`);
+  }
+  return (await resp.json()).content.sha;
+}

@@ -23,14 +23,6 @@
 
   <main>
 
-    <!-- Barre de sauvegarde (sticky) -->
-    <div class="save-bar" id="save-bar">
-      <span id="dirty-msg" class="dirty-msg hidden">● Modifications non enregistrées</span>
-      <button id="btn-import-reinit" class="btn-outline btn-sm" title="Réimporter depuis un fichier teams.json">📂 Importer</button>
-      <button id="btn-export" class="btn-outline btn-sm" title="Télécharger teams.json">📥 Télécharger</button>
-      <button id="btn-save" class="btn-primary btn-sm">💾&nbsp; Enregistrer</button>
-    </div>
-
     <!-- Barre GitHub Token -->
     <div class="gh-bar" id="gh-bar">
       <span class="gh-bar-label">🔗 GitHub :</span>
@@ -44,21 +36,6 @@
       </div>
     </div>
 
-    <!-- Input fichier caché (déclenché par les boutons d'import) -->
-    <input type="file" id="import-file-input" class="hidden" accept=".json">
-
-    <!-- Panneau d'import initial (affiché si localStorage vide) -->
-    <div id="import-panel" class="hidden">
-      <div class="import-box">
-        <div class="import-icon">📂</div>
-        <h2>Importer teams.json</h2>
-        <p>
-          Ce fichier contient les divisions et adversaires du club.<br>
-          Il se trouve dans le dossier <code>config/</code> du projet.
-        </p>
-        <button id="btn-import-file" class="btn-primary">Choisir teams.json…</button>
-      </div>
-    </div>
 
     <!-- Contenu principal (onglets + tableaux) -->
     <div id="main-content">
@@ -74,6 +51,16 @@
               role="tab" aria-selected="false" aria-controls="tab-adversaires">
         Adversaires
         <span class="tab-count" id="count-adversaires"></span>
+      </button>
+      <button class="tab-btn" data-tab="fonds"
+              role="tab" aria-selected="false" aria-controls="tab-fonds">
+        🖼 Fonds
+        <span class="tab-count" id="count-fonds"></span>
+      </button>
+      <button class="tab-btn" data-tab="sponsors"
+              role="tab" aria-selected="false" aria-controls="tab-sponsors">
+        🤝 Sponsors
+        <span class="tab-count" id="count-sponsors"></span>
       </button>
     </div>
 
@@ -122,6 +109,87 @@
       </div>
     </div>
 
+    <!-- ── Panneau Fonds ──────────────────────────────── -->
+    <div class="tab-panel hidden" id="tab-fonds" role="tabpanel">
+
+      <!-- En-tête de section -->
+      <div class="bg-mgr-header">
+        <h2>Fonds disponibles <span class="tab-count" id="count-fonds-badge"></span></h2>
+        <button id="btn-add-bg" class="btn-primary btn-sm" disabled
+                title="Token GitHub requis pour uploader">
+          + Ajouter un fond
+        </button>
+      </div>
+
+      <!-- Grille des fonds -->
+      <div id="bg-grid" class="bg-mgr-grid"></div>
+
+      <!-- Panneau d'ajout -->
+      <div id="bg-add-panel" class="bg-add-panel hidden">
+        <div class="bg-add-form">
+          <h3>Ajouter un fond</h3>
+          <div class="bg-add-fields">
+            <label class="bg-add-field-label">
+              Image
+              <input type="file" id="add-img-input" accept="image/*" class="input-inline">
+            </label>
+            <div id="add-img-preview" class="bg-add-preview"></div>
+            <label class="bg-add-field-label">
+              Nom affiché
+              <input type="text" id="add-label-input" class="input-inline"
+                     placeholder="ex: Terrain en fête" maxlength="40"
+                     autocomplete="off" spellcheck="false">
+            </label>
+          </div>
+          <div class="bg-add-actions">
+            <button id="btn-add-confirm" class="btn-primary btn-sm">⬆&nbsp; Uploader</button>
+            <button id="btn-add-cancel"  class="btn-outline btn-sm">Annuler</button>
+          </div>
+          <div id="add-progress" class="add-progress hidden"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Panneau Sponsors ───────────────────────────── -->
+    <div class="tab-panel hidden" id="tab-sponsors" role="tabpanel">
+
+      <div class="bg-mgr-header">
+        <h2>Sponsors disponibles <span class="tab-count" id="count-sponsors-badge"></span></h2>
+        <button id="btn-add-sp" class="btn-primary btn-sm" disabled
+                title="Token GitHub requis pour uploader">
+          + Ajouter un sponsor
+        </button>
+      </div>
+
+      <div id="sp-grid" class="bg-mgr-grid"></div>
+
+      <div id="sp-add-panel" class="bg-add-panel hidden">
+        <div class="bg-add-form">
+          <h3>Ajouter un sponsor</h3>
+          <div class="bg-add-fields">
+            <label class="bg-add-field-label">
+              Image
+              <input type="file" id="sp-img-input" accept="image/*" class="input-inline">
+            </label>
+            <div id="sp-img-preview" class="bg-add-preview"></div>
+            <label class="bg-add-field-label">
+              Nom affiché
+              <input type="text" id="sp-label-input" class="input-inline"
+                     placeholder="ex: Sopem" maxlength="40"
+                     autocomplete="off" spellcheck="false">
+            </label>
+          </div>
+          <div class="bg-add-actions">
+            <button id="btn-sp-add-confirm" class="btn-primary btn-sm">⬆&nbsp; Uploader</button>
+            <button id="btn-sp-add-cancel"  class="btn-outline btn-sm">Annuler</button>
+          </div>
+          <div id="sp-add-progress" class="add-progress hidden"></div>
+        </div>
+      </div>
+
+    </div>
+
     </div><!-- /main-content -->
 
   </main>
@@ -131,5 +199,7 @@
 
   <script src="src/github-api.js"></script>
   <script src="src/config.js"></script>
+  <script src="src/fonds.js"></script>
+  <script src="src/sponsors.js"></script>
 </body>
 </html>

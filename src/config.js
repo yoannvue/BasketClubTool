@@ -132,6 +132,14 @@ function updateCounts() {
     Object.keys(state.data.divisions   || {}).length;
   document.getElementById("count-adversaires").textContent =
     Object.keys(state.data.adversaires || {}).length;
+  const fondsEl = document.getElementById("count-fonds");
+  if (fondsEl && typeof bgState !== "undefined") fondsEl.textContent = bgState.bgs.length;
+  const fondsBadge = document.getElementById("count-fonds-badge");
+  if (fondsBadge && typeof bgState !== "undefined") fondsBadge.textContent = bgState.bgs.length;
+  const spEl = document.getElementById("count-sponsors");
+  if (spEl && typeof spState !== "undefined") spEl.textContent = spState.items.length;
+  const spBadge = document.getElementById("count-sponsors-badge");
+  if (spBadge && typeof spState !== "undefined") spBadge.textContent = spState.items.length;
 }
 
 // ── Construction des lignes ──────────────────────────────────────────────────
@@ -445,8 +453,10 @@ function _updateTokenUI() {
     statusEl.textContent = "⚠ Token non configuré \u2014 enregistrement local uniquement";
     statusEl.className   = "gh-status gh-status-missing";
     formEl.classList.remove("hidden");
-  }
-}
+  }  // Met à jour le bouton d’ajout de fond
+  if (typeof updateBgAddBtn === "function") updateBgAddBtn();
+  // Met à jour le bouton d’ajout de sponsor
+  if (typeof updateSpAddBtn === "function") updateSpAddBtn();}
 
 function _setupTokenUI() {
   _updateTokenUI();
@@ -486,7 +496,6 @@ function _setupTokenUI() {
 // ── Initialisation ────────────────────────────────────────────────────────────
 
 async function init() {
-  _setupImportHandler();
   _setupTokenUI();
 
   state.data = await apiLoad();
@@ -497,54 +506,16 @@ async function init() {
     return;
   }
 
-  document.getElementById("import-panel").classList.add("hidden");
   document.getElementById("main-content").classList.remove("hidden");
-  _setupUI();
+  await _setupUI();
 }
 
 init();
 
-/**
- * Configure l'input file caché et les boutons qui le déclenchent.
- * Gère l'import initial (depuis le panneau vide) ET la réimport depuis la barre.
- */
-function _setupImportHandler() {
-  const fileInput = document.getElementById("import-file-input");
-
-  // Bouton du panneau d'import initial
-  document.getElementById("btn-import-file")
-    .addEventListener("click", () => fileInput.click());
-  // Bouton de ré-import dans la barre de sauvegarde
-  document.getElementById("btn-import-reinit")
-    .addEventListener("click", () => fileInput.click());
-
-  fileInput.addEventListener("change", async e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    e.target.value = "";  // reset pour permettre de re-sélectionner le même fichier
-    try {
-      const text = await file.text();
-      state.data      = JSON.parse(text);
-      state.githubSha = null;  // SHA inconnu — sera rafraichi au prochain commit
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data));
-      // Si on venait du panneau vide → afficher le contenu principal
-      document.getElementById("import-panel").classList.add("hidden");
-      document.getElementById("main-content").classList.remove("hidden");
-      markDirty(false);
-      renderTable("divisions");
-      renderTable("adversaires");
-      updateCounts();
-      showToast("✓  teams.json importé", "ok");
-    } catch (err) {
-      showToast(`Erreur d'import : ${err.message}`, "err");
-    }
-  });
-}
-
 // ── Initialisation ────────────────────────────────────────────────────────────
 
 /** Configure tous les listeners UI (appelé une fois les données disponibles). */
-function _setupUI() {
+async function _setupUI() {
   renderTable("divisions");
   renderTable("adversaires");
   updateCounts();
@@ -585,11 +556,10 @@ function _setupUI() {
   document.getElementById("search-adversaires")
     .addEventListener("input", e => renderTable("adversaires", e.target.value));
 
-  // Sauvegarde + export
-  document.getElementById("btn-save").addEventListener("click", handleSave);
-  document.getElementById("btn-export").addEventListener("click", () => {
-    if (state.data) exportTeamsJson(state.data);
-  });
+  // Initialiser l'onglet Fonds
+  await initFonds();
+  // Initialiser l'onglet Sponsors
+  await initSponsors();
 }
 
 

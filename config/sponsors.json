@@ -1,11 +1,101 @@
-[
-  { "label": "Garcon Dribblant", "file": "ressources/fonds/fond.png"  },
-  { "label": "Fille Dribblant",  "file": "ressources/fonds/fond2.png" },
-  { "label": "Fille Shoot",      "file": "ressources/fonds/fond3.png" },
-  { "label": "Garçon Passe",     "file": "ressources/fonds/fond4.png" },
-  { "label": "JH Dribble",       "file": "ressources/fonds/fond5.png" },
-  { "label": "JH Passe",         "file": "ressources/fonds/fond6.png" },
-  { "label": "JH Shoot",         "file": "ressources/fonds/fond7.png" },
-  { "label": "JF Shoot",         "file": "ressources/fonds/fond8.png" },
-  { "label": "JF Passe",         "file": "ressources/fonds/fond9.png" }
-]
+{
+  "sponsors": [
+    {
+      "label": "Valerie PIAT",
+      "file": "ressources/sponsors/1-valerie_piat.jpg"
+    },
+    {
+      "label": "Sopem",
+      "file": "ressources/sponsors/2-logo sopem.jpg"
+    },
+    {
+      "label": "Centrale francaise de broderie",
+      "file": "ressources/sponsors/3 - Centrale Francaise de Broderie.jpg"
+    },
+    {
+      "label": "Dkdo",
+      "file": "ressources/sponsors/4-Dkdo.png"
+    },
+    {
+      "label": "Animazoo",
+      "file": "ressources/sponsors/5 - logo animazoo.png"
+    },
+    {
+      "label": "Autosur",
+      "file": "ressources/sponsors/6 - Autosur.jpg"
+    },
+    {
+      "label": "Pièce Auto",
+      "file": "ressources/sponsors/8 - LOGO PIECE AUTO.png"
+    },
+    {
+      "label": "Peinture Anichoises",
+      "file": "ressources/sponsors/9 - logo-peinture-anichoises-1.png"
+    },
+    {
+      "label": "Flash Auto",
+      "file": "ressources/sponsors/10-logo flash auto.jpg"
+    },
+    {
+      "label": "IAD",
+      "file": "ressources/sponsors/11- IAD - Mme Collado - maman Ruben.PNG"
+    },
+    {
+      "label": "JLD Services",
+      "file": "ressources/sponsors/12 - JLD-Services.jpeg"
+    },
+    {
+      "label": "Steeve Dorchy",
+      "file": "ressources/sponsors/13 - Steeve Dorchy logo.jpg"
+    },
+    {
+      "label": "Taxillico",
+      "file": "ressources/sponsors/14 - taxillico.png"
+    },
+    {
+      "label": "Graph 3D",
+      "file": "ressources/sponsors/15 - logo graph3d.gif"
+    },
+    {
+      "label": "PL des Gentlemen",
+      "file": "ressources/sponsors/16 - logo pl des gentlemen.jpg"
+    },
+    {
+      "label": "Miss Lady",
+      "file": "ressources/sponsors/17- logo Miss Lady.jpg"
+    },
+    {
+      "label": "Harmony Coiffure",
+      "file": "ressources/sponsors/18 - Harmony Coiffure.jpeg"
+    },
+    {
+      "label": "Passtime",
+      "file": "ressources/sponsors/19 - passtime.png"
+    },
+    {
+      "label": "Mecaloc Nord",
+      "file": "ressources/sponsors/20 - logo MecalocNord.png"
+    },
+    {
+      "label": "La Chouette",
+      "file": "ressources/sponsors/21 - logo laChouette.png"
+    },
+    {
+      "label": "Optique Blandin",
+      "file": "ressources/sponsors/22 - Optique Blandin.png"
+    },
+    {
+      "label": "Christelle Dayez",
+      "file": "ressources/sponsors/23 - Christelle Dayez .png"
+    },
+    {
+      "label": "Loop Ticket",
+      "file": "ressources/sponsors/24 - Loop Ticket.png"
+    },
+    {
+      "label": "Mutuelle MGC",
+      "file": "ressources/sponsors/25 - Mutuelle MGC.jpg"
+    }
+  ],
+  "last": 0
+}
