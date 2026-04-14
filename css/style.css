@@ -445,6 +445,35 @@ main {
 }
 
 /* ──────────────────────────────────────────────────────────
+   Google Drive section
+   ────────────────────────────────────────────────────────── */
+.drive-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.gd-status {
+  font-size: 13px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.gd-warn      { background: #fff3cd; color: #856404; }
+.gd-ready     { background: #e2e3e5; color: #383d41; }
+.gd-ok        { background: #d4edda; color: #155724; }
+.gd-uploading { background: #cce5ff; color: #004085; }
+.gd-err       { background: #f8d7da; color: #721c24; }
+
+.gd-status a { color: inherit; font-weight: 600; }
+
+/* ──────────────────────────────────────────────────────────
    Log
    ────────────────────────────────────────────────────────── */
 .log {

@@ -71,6 +71,15 @@
       <img id="result-img" src="" alt="Affiche planning générée" class="result-img">
       <div class="result-actions">
         <a id="btn-download" class="btn-primary" download="affiche_planning.png">⬇&nbsp; Télécharger PNG</a>
+        <button id="btn-download-excel" class="btn-secondary">📊&nbsp; Télécharger Excel organisation</button>
+      </div>
+      <!-- Google Drive -->
+      <div class="drive-section">
+        <span class="layout-label">Google Drive :</span>
+        <span id="gd-status" class="gd-status gd-warn">Chargement…</span>
+        <button id="btn-upload-drive" class="btn-secondary" disabled>
+          ☁&nbsp; Envoyer vers Drive
+        </button>
       </div>
     </div>
 
@@ -83,8 +92,11 @@
   </main>
 
   <!-- ── Scripts ────────────────────────────────────────── -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="src/transform.js"></script>
   <script src="src/local-render.js"></script>
+  <script src="src/excel-organisation.js"></script>
+  <script src="src/google-drive.js"></script>
   <script src="src/app.js"></script>
 
 </body>

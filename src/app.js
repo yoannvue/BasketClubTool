@@ -43,6 +43,9 @@ function log(msg, type = "info") {
 
 let _selectedFile = null;
 
+// Données du dernier planning parsé (pour la génération Excel)
+let _lastPlanningData = null;
+
 function _setupFileHandling() {
   const zone       = document.getElementById("drop-zone");
   const input      = document.getElementById("file-input");
@@ -94,6 +97,7 @@ async function handleGenerate() {
     // 1. Parse Excel
     log("Lecture du fichier Excel\u2026", "info");
     const { domicileList, exterieurList, weekLabel, exemptList, unknownDivisions } = await loadPlanningData(_selectedFile);
+    _lastPlanningData = { domicileList, exterieurList, weekLabel };
     log(
       `${domicileList.length} match(s) domicile \u00b7 ${exterieurList.length} extérieur \u00b7 ${exemptList.length} exempt(s) \u00b7 ${weekLabel}`,
       "ok"
@@ -134,6 +138,10 @@ async function handleGenerate() {
     resultArea.scrollIntoView({ behavior: "smooth" });
     log("Affiche générée avec succès !", "ok");
 
+    // Activer le bouton Excel
+    const excelBtn = document.getElementById("btn-download-excel");
+    if (excelBtn) excelBtn.disabled = false;
+
   } catch (err) {
     log(`Erreur : ${err.message || String(err)}`, "err");
     console.error("Erreur génération affiche planning :", err);
@@ -146,11 +154,61 @@ async function handleGenerate() {
 
 async function init() {
   await _loadBackgrounds();
+  await gdLoadSettings();
+  gdInit();
   _setupFileHandling();
   _buildBgPicker();
-  document.getElementById("btn-generate")     .addEventListener("click", handleGenerate);
+  document.getElementById("btn-generate")      .addEventListener("click", handleGenerate);
   document.getElementById("btn-layout-paysage") .addEventListener("click", () => setLocalLayout("paysage"));
   document.getElementById("btn-layout-portrait").addEventListener("click", () => setLocalLayout("portrait"));
+
+  // Bouton téléchargement Excel organisation
+  const excelBtn = document.getElementById("btn-download-excel");
+  if (excelBtn) {
+    excelBtn.disabled = true;
+    excelBtn.addEventListener("click", () => {
+      if (!_lastPlanningData) { log("Aucune donnée — générez d'abord l'affiche.", "warn"); return; }
+      try {
+        const { wb, filename } = generateOrganisationExcel(
+          _lastPlanningData.domicileList,
+          _lastPlanningData.exterieurList,
+          _lastPlanningData.weekLabel
+        );
+        _lastPlanningData.wb       = wb;
+        _lastPlanningData.filename = filename;
+        log(`Excel organisation téléchargé : ${filename}`, "ok");
+        // Activer le bouton Drive après téléchargement
+        const driveBtn = document.getElementById("btn-upload-drive");
+        if (driveBtn && gdIsConfigured()) driveBtn.disabled = false;
+      } catch (err) {
+        log(`Erreur Excel : ${err.message || String(err)}`, "err");
+        console.error("Erreur génération Excel organisation :", err);
+      }
+    });
+  }
+
+  // Bouton upload Google Drive
+  const driveBtn = document.getElementById("btn-upload-drive");
+  if (driveBtn) {
+    driveBtn.addEventListener("click", async () => {
+      if (!_lastPlanningData?.wb) {
+        log("Téléchargez d'abord le fichier Excel, puis envoyez-le sur Drive.", "warn");
+        return;
+      }
+      try {
+        gdUpdateUI("uploading");
+        const { id, url, name } = await gdUploadWorkbook(
+          _lastPlanningData.wb,
+          _lastPlanningData.filename
+        );
+        log(`Drive : ${name} — <a href="${url}" target="_blank" rel="noopener">Ouvrir</a>`, "ok");
+      } catch (err) {
+        gdUpdateUI("error", err.message || String(err));
+        log(`Erreur Drive : ${err.message || String(err)}`, "err");
+        console.error("Erreur upload Drive :", err);
+      }
+    });
+  }
 
   setLocalLayout("portrait");
   _updateGenerateButton();

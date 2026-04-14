@@ -1,0 +1,29 @@
+{
+  "_comment": [
+    "Paramètres Google Drive pour l'upload automatique du fichier Excel d'organisation.",
+    "",
+    "CONFIGURATION REQUISE dans Google Cloud Console :",
+    "  1. Créer un projet sur https://console.cloud.google.com",
+    "  2. Activer l'API 'Google Drive API'",
+    "  3. Créer des identifiants OAuth 2.0 → Application Web",
+    "  4. Ajouter les Origines JavaScript autorisées :",
+    "       - http://localhost  (développement local)",
+    "       - https://<votre-domaine>.github.io  (GitHub Pages)",
+    "  5. Copier le 'Client ID' dans le champ 'client_id' ci-dessous.",
+    "",
+    "CHAMPS :",
+    "  client_id       : Client ID OAuth 2.0 (obligatoire)",
+    "  target_folder_id: ID du dossier Drive de destination",
+    "                    (laisser vide = racine du Drive)",
+    "                    L'ID se trouve dans l'URL du dossier :",
+    "                    https://drive.google.com/drive/folders/<ID>",
+    "  share_role      : Rôle du partage — 'writer' (lecture+écriture)",
+    "                    ou 'reader' (lecture seule)",
+    "  share_type      : Type de partage — 'anyone' (tout le monde)",
+    "                    ou 'domain' (domaine Google Workspace)"
+  ],
+  "client_id": "70860460803-90dc6oiv7eigo5h138ud7dheu2p0bmd7.apps.googleusercontent.com",
+  "target_folder_id": "10kqZNhMlvxdU2pgqgsX6yCPo_cDs-Vdk",
+  "share_role": "writer",
+  "share_type": "anyone"
+}
