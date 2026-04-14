@@ -83,8 +83,8 @@ function _drawResultsHeader(ctx, W, weekLabel, logoImg) {
   _fill(ctx, 0, HDR - 5, W, 5, C.ACCENT);
 }
 
-/** Dessine le footer réservé au sponsor. */
-function _drawFooter(ctx, W, H, sponsorText) {
+/** Dessine le footer avec l'image sponsor centrée (scaling contain). */
+function _drawFooter(ctx, W, H, sponsorImg) {
   const C       = _RRC.C;
   const F       = _RRC.F;
   const footerY = H - _RRC.FOOTER_H;
@@ -100,12 +100,21 @@ function _drawFooter(ctx, W, H, sponsorText) {
   ctx.lineTo(W, footerY + 4.5);
   ctx.stroke();
 
-  const label = sponsorText && sponsorText.trim()
-    ? sponsorText.trim()
-    : "\u25C6  ESPACE SPONSOR  \u25C6";
-
-  const color = sponsorText && sponsorText.trim() ? C.TEXT : C.SPONSOR_TEXT;
-  _txt(ctx, label, W / 2, footerY + _RRC.FOOTER_H / 2 + 4, F.SPONSOR, color, "center");
+  if (sponsorImg) {
+    // Contain : maximal sans déformation, centré dans le footer
+    const PAD  = _RRC.PAD;
+    const maxW = W - PAD * 4;
+    const maxH = _RRC.FOOTER_H - 24;
+    const scale = Math.min(maxW / sponsorImg.width, maxH / sponsorImg.height);
+    const iW = Math.round(sponsorImg.width  * scale);
+    const iH = Math.round(sponsorImg.height * scale);
+    const ix = Math.round((W - iW) / 2);
+    const iy = Math.round(footerY + (_RRC.FOOTER_H - iH) / 2);
+    ctx.drawImage(sponsorImg, ix, iy, iW, iH);
+  } else {
+    _txt(ctx, "\u25C6  ESPACE SPONSOR  \u25C6",
+         W / 2, footerY + _RRC.FOOTER_H / 2 + 4, F.SPONSOR, C.SPONSOR_TEXT, "center");
+  }
 }
 
 // ── API publique ──────────────────────────────────────────────────────────────
@@ -113,11 +122,11 @@ function _drawFooter(ctx, W, H, sponsorText) {
 /**
  * @param {object[]} matchList    Tableau produit par loadResultsData().
  * @param {string}   weekLabel    Label de la semaine (ex: "Résultats — semaine du 12 avril 2026").
- * @param {string|null} bgPath   Chemin vers l'image de fond (null = aucun).
- * @param {string}   sponsorText Texte sponsor dans le footer (vide = placeholder).
+ * @param {string|null} bgPath        Chemin vers l'image de fond (null = aucun).
+ * @param {string|null} sponsorImgPath Chemin vers l'image sponsor (null = placeholder).
  * @returns {Promise<Blob>}
  */
-async function generateResultsImage(matchList, weekLabel, bgPath = null, sponsorText = "") {
+async function generateResultsImage(matchList, weekLabel, bgPath = null, sponsorImgPath = null) {
   const C    = _RRC.C;
   const F    = _RRC.F;
   const W    = _RRC.W;
@@ -130,9 +139,10 @@ async function generateResultsImage(matchList, weekLabel, bgPath = null, sponsor
   const H        = _LC.HDR_H + 12 + contentH + 12 + _RRC.FOOTER_H;
 
   // ── Ressources ───────────────────────────────────────────────────
-  const [logoImg, bgImg] = await Promise.all([
+  const [logoImg, bgImg, sponsorImg] = await Promise.all([
     _loadImg("ressources/logo.png"),
-    bgPath ? _loadImg(bgPath) : Promise.resolve(null),
+    bgPath        ? _loadImg(bgPath)        : Promise.resolve(null),
+    sponsorImgPath ? _loadImg(sponsorImgPath) : Promise.resolve(null),
   ]);
 
   // ── Canvas ───────────────────────────────────────────────────────
@@ -219,7 +229,7 @@ async function generateResultsImage(matchList, weekLabel, bgPath = null, sponsor
   }
 
   // ── 5. Footer ────────────────────────────────────────────────────
-  _drawFooter(ctx, W, H, sponsorText);
+  _drawFooter(ctx, W, H, sponsorImg);
 
   // ── Export PNG ───────────────────────────────────────────────────
   return new Promise((resolve, reject) => {

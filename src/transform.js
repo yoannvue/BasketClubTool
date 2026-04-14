@@ -61,26 +61,33 @@ function _cellStr(val) {
 }
 
 /**
- * Résolution division → { categorie, typematch }
+ * Résolution division → { categorie, typematch, unknown }
  * teams.json stocke { prefixe: "CATEGORIE" } (valeur simple).
  * Correspondance exacte, puis fallback sur préfixe régex.
+ * unknown = true si aucune correspondance exacte n'a été trouvée.
  */
 function _resolveDivision(division, divMap) {
   division = _cellStr(division);
 
-  function _wrap(val) {
-    return typeof val === "object" ? val : { categorie: String(val), typematch: "CHAMPIONNAT" };
+  function _wrap(val, unknown) {
+    const base = typeof val === "object"
+      ? val
+      : { categorie: String(val), type: "CHAMPIONNAT" };
+    return { categorie: base.categorie, typematch: base.type ?? "CHAMPIONNAT", unknown: !!unknown };
   }
 
-  if (Object.prototype.hasOwnProperty.call(divMap, division)) return _wrap(divMap[division]);
+  // Correspondance exacte
+  if (Object.prototype.hasOwnProperty.call(divMap, division)) return _wrap(divMap[division], false);
 
   // Fallback préfixe (ex: "DFU11-8-P2-NEW" non encore dans teams.json)
   const m = division.match(/^([A-Z]+\d*)/);
   const prefix = m ? m[1] : division;
   for (const [key, val] of Object.entries(divMap)) {
-    if (key.startsWith(prefix)) return _wrap(val);
+    if (key.startsWith(prefix)) return _wrap(val, true);
   }
-  return { categorie: division, typematch: "CHAMPIONNAT" };
+
+  // Totalement inconnu
+  return { categorie: division, typematch: "CHAMPIONNAT", unknown: true };
 }
 
 function _isAbp(name, marker) {
@@ -232,6 +239,7 @@ async function loadPlanningData(file) {
   const domicileList  = [];
   const exterieurList = [];
   const exemptList    = [];  // catégories ABP exemptées cette semaine
+  const unknownDivisions = new Map(); // code inconnu → voisin utilisé en fallback
   const datesFound    = [];
 
   // Sauter la ligne d'en-tête (index 0)
@@ -255,6 +263,13 @@ async function loadPlanningData(file) {
 
     const division = _cellStr(row[COLS.Division]);
     const info     = _resolveDivision(division, divMap);
+
+    // Collecter les divisions inconnues (pour avertissement dans le journal)
+    if (info.unknown && division) {
+      if (!unknownDivisions.has(division)) {
+        unknownDivisions.set(division, info.categorie);
+      }
+    }
 
     const dt        = _buildDatetime(row[COLS.Date], row[COLS.Heure]);
     const sortKey   = dt ? dt.getTime() : i;
@@ -307,5 +322,5 @@ async function loadPlanningData(file) {
     weekLabel = `Semaine du ${_formatDateFr(new Date())}`;
   }
 
-  return { domicileList, exterieurList, weekLabel, exemptList };
+  return { domicileList, exterieurList, weekLabel, exemptList, unknownDivisions };
 }

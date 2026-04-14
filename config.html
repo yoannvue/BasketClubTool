@@ -76,9 +76,9 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>Code fédéral</th>
-              <th>Catégorie</th>
-              <th>Match</th>
+              <th data-col="key" data-table="divisions" class="th-sortable">Code fédéral</th>
+              <th data-col="categorie" data-table="divisions" class="th-sortable">Catégorie</th>
+              <th data-col="type" data-table="divisions" class="th-sortable">Match</th>
               <th class="col-actions"></th>
             </tr>
           </thead>
@@ -99,8 +99,8 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>Nom long (fédéral)</th>
-              <th>Nom court (affiche)</th>
+              <th data-col="key" data-table="adversaires" class="th-sortable">Nom long (fédéral)</th>
+              <th data-col="val" data-table="adversaires" class="th-sortable">Nom court (affiche)</th>
               <th class="col-actions"></th>
             </tr>
           </thead>
@@ -154,6 +154,19 @@
     <!-- ── Panneau Sponsors ───────────────────────────── -->
     <div class="tab-panel hidden" id="tab-sponsors" role="tabpanel">
 
+      
+
+      <!-- Dernier sponsor utilisé -->
+      <div class="sp-next-bar">
+        <label class="sp-next-label" for="sp-next-input">
+          Prochain sponsor utilisé
+        </label>
+        <input type="number" id="sp-last-input" class="input-inline sp-last-input"
+               min="0" step="1" value="0">
+        <button id="btn-sp-save-last" class="btn-outline btn-sm">Enregistrer</button>
+        <span id="sp-last-hint" class="sp-last-hint"></span>
+      </div>
+
       <div class="bg-mgr-header">
         <h2>Sponsors disponibles <span class="tab-count" id="count-sponsors-badge"></span></h2>
         <button id="btn-add-sp" class="btn-primary btn-sm" disabled
@@ -163,7 +176,6 @@
       </div>
 
       <div id="sp-grid" class="bg-mgr-grid"></div>
-
       <div id="sp-add-panel" class="bg-add-panel hidden">
         <div class="bg-add-form">
           <h3>Ajouter un sponsor</h3>

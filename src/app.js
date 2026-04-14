@@ -93,11 +93,21 @@ async function handleGenerate() {
   try {
     // 1. Parse Excel
     log("Lecture du fichier Excel\u2026", "info");
-    const { domicileList, exterieurList, weekLabel, exemptList } = await loadPlanningData(_selectedFile);
+    const { domicileList, exterieurList, weekLabel, exemptList, unknownDivisions } = await loadPlanningData(_selectedFile);
     log(
       `${domicileList.length} match(s) domicile \u00b7 ${exterieurList.length} extérieur \u00b7 ${exemptList.length} exempt(s) \u00b7 ${weekLabel}`,
       "ok"
     );
+
+    // Avertir pour chaque division inconnue
+    if (unknownDivisions && unknownDivisions.size > 0) {
+      for (const [code, fallback] of unknownDivisions) {
+        log(
+          `\u26a0 Division inconnue «\u00a0${code}\u00a0\u00bb — catégorie utilisée en fallback : «\u00a0${fallback}\u00a0\u00bb. Pensez \u00e0 l'ajouter dans la config.`,
+          "warn"
+        );
+      }
+    }
 
     if (domicileList.length + exterieurList.length === 0) {
       log("Aucun match trouvé pour ABP dans ce fichier. Vérifie le contenu.", "warn");

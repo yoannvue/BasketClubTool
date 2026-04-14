@@ -145,6 +145,28 @@ main {
   vertical-align: middle;
 }
 
+.data-table thead th.th-sortable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.data-table thead th.th-sortable:hover {
+  background: #2a6395;
+}
+.data-table thead th.th-sortable::after {
+  content: " ⇅";
+  opacity: .4;
+  font-size: 11px;
+}
+.data-table thead th.th-sortable.sort-asc::after {
+  content: " ▲";
+  opacity: 1;
+}
+.data-table thead th.th-sortable.sort-desc::after {
+  content: " ▼";
+  opacity: 1;
+}
+
 /* Colonne clé : monospace + couleur primaire */
 .data-table td:first-child {
   font-family: "Courier New", Consolas, monospace;
@@ -490,4 +512,40 @@ select.input-inline {
   font-size: 13px;
   font-weight: 600;
   color: var(--primary);
+}
+
+/* ── Barre « prochain sponsor » ─────────────────────────── */
+.sp-last-bar, .sp-next-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+.sp-last-label, .sp-next-label {
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.sp-last-label code, .sp-next-label code {
+  background: #e4edf7;
+  color: var(--primary);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+.sp-last-input {
+  width: 72px;
+  text-align: center;
+  padding: 6px 8px;
+}
+.sp-last-hint {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: italic;
 }

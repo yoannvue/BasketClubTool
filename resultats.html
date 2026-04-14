@@ -52,16 +52,10 @@
         <div id="bg-picker" class="bg-picker"></div>
       </div>
 
-      <!-- Sponsor (footer) -->
+      <!-- Sponsor (footer) - sélectionné automatiquement -->
       <div class="sponsor-row">
         <span class="layout-label">Sponsor (footer) :</span>
-        <input
-          type="text"
-          id="sponsor-input"
-          class="sponsor-input"
-          placeholder="Laissez vide pour afficher un espace réservé"
-          maxlength="80"
-        >
+        <span id="sponsor-next-info" class="sponsor-next-info">Chargement…</span>
       </div>
 
       <p class="hint" id="generate-hint"></p>
@@ -88,6 +82,7 @@
   </main>
 
   <!-- ── Scripts (ordre de dépendances) ────────────────── -->
+  <script src="src/github-api.js"></script>
   <script src="src/transform.js"></script>
   <script src="src/local-render.js"></script>
   <script src="src/results-transform.js"></script>

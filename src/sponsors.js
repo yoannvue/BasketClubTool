@@ -14,7 +14,7 @@ const SP_IMG_DIR     = "ressources/sponsors/";
 const spState = {
   items: [],  // [{ label, file }, …]
   sha:   null,
-  last:  0,   // champ "last" conservé dans sponsors.json
+  next:  0,   // champ "next" conservé dans sponsors.json
 };
 
 // ── Bouton « Ajouter » : état selon token ─────────────────────────────────────
@@ -35,9 +35,9 @@ async function spLoad() {
     try {
       const { data, sha } = await ghReadJsonFile(SP_JSON_PATH);
       spState.sha  = sha;
-      spState.last = data.last ?? 0;
+      spState.next = data.next ?? 0;
       const items  = Array.isArray(data.sponsors) ? data.sponsors : [];
-      localStorage.setItem(SP_STORAGE_KEY, JSON.stringify({ sponsors: items, last: spState.last }));
+      localStorage.setItem(SP_STORAGE_KEY, JSON.stringify({ sponsors: items, next: spState.next }));
       return items;
     } catch (e) {
       console.warn("[sponsors] Lecture GitHub échouée, fallback local :", e.message);
@@ -48,7 +48,7 @@ async function spLoad() {
   if (stored) {
     try {
       const parsed = JSON.parse(stored);
-      spState.last = parsed.last ?? 0;
+      spState.next = parsed.next ?? 0;
       return Array.isArray(parsed.sponsors) ? parsed.sponsors : [];
     } catch (_) {}
   }
@@ -57,7 +57,7 @@ async function spLoad() {
     const resp = await fetch(SP_JSON_PATH);
     if (resp.ok) {
       const data   = await resp.json();
-      spState.last = data.last ?? 0;
+      spState.next = data.next ?? 0;
       return Array.isArray(data.sponsors) ? data.sponsors : [];
     }
   } catch (_) {}
@@ -67,7 +67,7 @@ async function spLoad() {
 // ── Sauvegarde ────────────────────────────────────────────────────────────────
 
 async function spSave() {
-  const payload = { sponsors: spState.items, last: spState.last };
+  const payload = { sponsors: spState.items, next: spState.next };
   localStorage.setItem(SP_STORAGE_KEY, JSON.stringify(payload));
 
   if (ghToken()) {
@@ -138,6 +138,61 @@ function renderSpGrid() {
 }
 
 // ── Panneau d'ajout ───────────────────────────────────────────────────────────
+
+function _setupSpLastBar() {
+  const input   = document.getElementById("sp-last-input");
+  const saveBtn = document.getElementById("btn-sp-save-last");
+
+  saveBtn.addEventListener("click", async () => {
+    let val = parseInt(input.value, 10);
+    if (isNaN(val) || val < 0) {
+      showToast("Valeur invalide pour next.", "err");
+      return;
+    }
+    // Toujours dans les bornes : wrap si nécessaire
+    if (spState.items.length > 0) {
+      val = val % spState.items.length;
+    } else {
+      val = 0;
+    }
+    spState.next = val;
+    input.value  = val;  // répercuter la valeur normalisée
+    saveBtn.disabled = true;
+    try {
+      await spSave();
+      _updateLastHint();
+      showToast(`✓ next enregistré à ${val}`, "ok");
+    } catch (err) {
+      showToast(`Erreur : ${err.message}`, "err");
+    } finally {
+      saveBtn.disabled = false;
+    }
+  });
+
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter") saveBtn.click();
+  });
+}
+
+function _updateLastHint() {
+  const hint  = document.getElementById("sp-last-hint");
+  const input = document.getElementById("sp-last-input");
+  if (!hint || !input) return;
+  const count = spState.items.length;
+  // S'assurer que next est dans les bornes
+  if (count > 0 && spState.next >= count) {
+    spState.next = spState.next % count;
+  }
+  input.value = spState.next;
+  const current = spState.items[spState.next];
+  if (current) {
+    const nextIdx   = (spState.next + 1) % count;
+    const nextLabel = spState.items[nextIdx]?.label ?? "";
+    hint.textContent = `→ prochain affiché : "${current.label}" — suivant : "${nextLabel}"`;
+  } else {
+    hint.textContent = count === 0 ? "(liste vide)" : "";
+  }
+}
 
 function _setupSpAddPanel() {
   const addBtn    = document.getElementById("btn-add-sp");
@@ -254,11 +309,13 @@ async function handleSpDelete(index) {
  * Met en place le panneau d'ajout et charge sponsors.json.
  */
 async function initSponsors() {
+  _setupSpLastBar();
   _setupSpAddPanel();
   updateSpAddBtn();
 
   const items     = await spLoad();
   spState.items   = items;
   renderSpGrid();
+  _updateLastHint();
   updateCounts();
 }

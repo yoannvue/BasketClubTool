@@ -16,6 +16,14 @@ const state = {
   githubSha:  null,   // SHA du blob GitHub courant (requis pour le commit)
 };
 
+// ── État du tri ───────────────────────────────────────────────────────────────
+
+// sortState[type] = { col: "key"|"categorie"|"type"|"val", dir: 1|-1 }
+const sortState = {
+  divisions:   { col: "key", dir: 1 },
+  adversaires: { col: "key", dir: 1 },
+};
+
 // ── Utilitaires HTML ─────────────────────────────────────────────────────────
 
 function escHtml(str) {
@@ -259,7 +267,7 @@ function renderTable(type, filter = "") {
 
   tbody.innerHTML = "";
 
-  const entries = Object.entries(dict).filter(([k, v]) => {
+  let entries = Object.entries(dict).filter(([k, v]) => {
     if (!term) return true;
     if (k.toLowerCase().includes(term)) return true;
     const vStr = type === "divisions"
@@ -267,6 +275,24 @@ function renderTable(type, filter = "") {
       : String(v).toLowerCase();
     return vStr.includes(term);
   });
+
+  // ── Tri ──
+  const { col, dir } = sortState[type];
+  entries.sort(([ka, va], [kb, vb]) => {
+    let a, b;
+    if (col === "key") {
+      a = ka; b = kb;
+    } else if (col === "categorie") {
+      a = va?.categorie ?? ""; b = vb?.categorie ?? "";
+    } else if (col === "type") {
+      a = va?.type ?? ""; b = vb?.type ?? "";
+    } else { // "val" (adversaires)
+      a = String(va); b = String(vb);
+    }
+    return dir * a.localeCompare(b, "fr", { sensitivity: "base" });
+  });
+
+  _updateSortHeaders(type);
 
   if (entries.length === 0) {
     const tr = document.createElement("tr");
@@ -283,6 +309,37 @@ function renderTable(type, filter = "") {
   for (const [k, v] of entries) {
     tbody.appendChild(buildNormalRow(k, v, type));
   }
+}
+
+// ── Tri des colonnes ──────────────────────────────────────────────────────────
+
+/** Met à jour les flèches de tri dans les en-têtes. */
+function _updateSortHeaders(type) {
+  const { col, dir } = sortState[type];
+  document.querySelectorAll(`.th-sortable[data-table="${type}"]`).forEach(th => {
+    th.classList.remove("sort-asc", "sort-desc");
+    if (th.dataset.col === col) {
+      th.classList.add(dir === 1 ? "sort-asc" : "sort-desc");
+    }
+  });
+}
+
+/** Branche les clics sur les en-têtes de colonnes triables. */
+function _setupSortHeaders() {
+  document.querySelectorAll(".th-sortable").forEach(th => {
+    th.addEventListener("click", () => {
+      const type = th.dataset.table;
+      const col  = th.dataset.col;
+      if (sortState[type].col === col) {
+        sortState[type].dir *= -1;  // Inverser le sens
+      } else {
+        sortState[type].col = col;
+        sortState[type].dir = 1;
+      }
+      const searchInput = document.getElementById(`search-${type}`);
+      renderTable(type, searchInput?.value ?? "");
+    });
+  });
 }
 
 // ── Annulation d'une éventuelle édition en cours ──────────────────────────────
@@ -516,6 +573,7 @@ init();
 
 /** Configure tous les listeners UI (appelé une fois les données disponibles). */
 async function _setupUI() {
+  _setupSortHeaders();
   renderTable("divisions");
   renderTable("adversaires");
   updateCounts();
